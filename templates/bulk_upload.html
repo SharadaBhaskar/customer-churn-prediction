@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Bulk Upload — ChurnPredict AI{% endblock %}
+
+{% block content %}
+
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="fw-bold">
+            <i class="bi bi-file-earmark-arrow-up" style="color:#667eea;"></i>
+            Bulk CSV Upload
+        </h2>
+        <p class="text-muted">
+            Upload a CSV file to predict churn for multiple customers at once
+        </p>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Upload Form -->
+    <div class="col-lg-7">
+        <div class="card p-4 mb-4">
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-upload" style="color:#667eea;"></i>
+                Upload Your CSV File
+            </h5>
+
+            <form method="POST" action="/bulk_upload"
+                  enctype="multipart/form-data">
+
+                <!-- File Drop Zone -->
+                <div class="border-2 border-dashed rounded-3 p-5 text-center mb-3"
+                     style="border: 2px dashed #667eea;
+                            background: #f8f0ff; cursor:pointer;"
+                     onclick="document.getElementById('csvFile').click()">
+                    <i class="bi bi-cloud-arrow-up fs-1 mb-2"
+                       style="color:#667eea;"></i>
+                    <h6 class="fw-bold">Click to upload or drag & drop</h6>
+                    <p class="text-muted small mb-0">
+                        Supported format: CSV only (max 10MB)
+                    </p>
+                    <p id="file-name" class="text-success fw-semibold mt-2 mb-0">
+                    </p>
+                </div>
+
+                <input type="file" id="csvFile" name="file"
+                       accept=".csv" class="d-none"
+                       onchange="showFileName(this)">
+
+                <button type="submit" class="btn btn-predict w-100">
+                    <i class="bi bi-lightning-charge"></i>
+                    Predict All Customers
+                </button>
+            </form>
+        </div>
+
+        <!-- Sample CSV Format -->
+        <div class="card p-4">
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-file-earmark-text"
+                   style="color:#38a169;"></i>
+                Required CSV Format
+            </h5>
+            <p class="text-muted small mb-3">
+                Your CSV file must have these exact column names:
+            </p>
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered text-center">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>customer_id</th>
+                            <th>tenure</th>
+                            <th>monthly_charges</th>
+                            <th>total_charges</th>
+                            <th>contract_type</th>
+                            <th>internet_service</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>CUST-001</td>
+                            <td>24</td>
+                            <td>65.50</td>
+                            <td>1572.00</td>
+                            <td>Month-to-month</td>
+                            <td>Fiber optic</td>
+                        </tr>
+                        <tr>
+                            <td>CUST-002</td>
+                            <td>12</td>
+                            <td>45.00</td>
+                            <td>540.00</td>
+                            <td>One year</td>
+                            <td>DSL</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <a href="#" class="btn btn-outline-success btn-sm mt-2">
+                <i class="bi bi-download"></i>
+                Download Sample CSV
+            </a>
+        </div>
+    </div>
+
+    <!-- Info Panel -->
+    <div class="col-lg-5">
+        <div class="card p-4 mb-4"
+             style="background:linear-gradient(135deg,#667eea,#764ba2);
+                    color:white;">
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-info-circle"></i> How Bulk Upload Works
+            </h5>
+            <div class="d-flex align-items-start mb-3">
+                <div class="rounded-circle d-flex align-items-center
+                            justify-content-center me-3 flex-shrink-0"
+                     style="width:32px;height:32px;
+                            background:rgba(255,255,255,0.2);">
+                    <span class="fw-bold">1</span>
+                </div>
+                <p class="mb-0 small">
+                    Prepare your CSV file with the required columns
+                </p>
+            </div>
+            <div class="d-flex align-items-start mb-3">
+                <div class="rounded-circle d-flex align-items-center
+                            justify-content-center me-3 flex-shrink-0"
+                     style="width:32px;height:32px;
+                            background:rgba(255,255,255,0.2);">
+                    <span class="fw-bold">2</span>
+                </div>
+                <p class="mb-0 small">
+                    Upload the file using the form on the left
+                </p>
+            </div>
+            <div class="d-flex align-items-start mb-3">
+                <div class="rounded-circle d-flex align-items-center
+                            justify-content-center me-3 flex-shrink-0"
+                     style="width:32px;height:32px;
+                            background:rgba(255,255,255,0.2);">
+                    <span class="fw-bold">3</span>
+                </div>
+                <p class="mb-0 small">
+                    ML model predicts churn for every customer instantly
+                </p>
+            </div>
+            <div class="d-flex align-items-start">
+                <div class="rounded-circle d-flex align-items-center
+                            justify-content-center me-3 flex-shrink-0"
+                     style="width:32px;height:32px;
+                            background:rgba(255,255,255,0.2);">
+                    <span class="fw-bold">4</span>
+                </div>
+                <p class="mb-0 small">
+                    Download results as PDF or Excel with one click
+                </p>
+            </div>
+        </div>
+
+        <div class="card p-4">
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-shield-check"
+                   style="color:#38a169;"></i>
+                What You Get
+            </h5>
+            <ul class="list-unstyled">
+                <li class="mb-2">
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                    Churn probability for each customer
+                </li>
+                <li class="mb-2">
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                    Risk badge — Low / Medium / High
+                </li>
+                <li class="mb-2">
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                    Retention action recommendations
+                </li>
+                <li class="mb-2">
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                    Downloadable PDF and Excel report
+                </li>
+                <li class="mb-2">
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                    All results saved to database
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function showFileName(input) {
+        const fileName = input.files[0]?.name;
+        if (fileName) {
+            document.getElementById('file-name').textContent =
+                '✅ Selected: ' + fileName;
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Home — ChurnPredict AI{% endblock %}
+
+{% block content %}
+
+<!-- Hero Section -->
+<div class="row align-items-center py-5">
+    <div class="col-lg-6">
+        <h1 class="display-4 fw-bold text-dark mb-3">
+            Predict Customer Churn <span style="color:#667eea;">Before It Happens</span>
+        </h1>
+        <p class="lead text-muted mb-4">
+            Use the power of Machine Learning to identify at-risk customers
+            and take action before they leave. Powered by XGBoost, Random Forest,
+            and Logistic Regression.
+        </p>
+        <a href="/predict" class="btn btn-predict btn-lg me-3">
+            <i class="bi bi-lightning-charge"></i> Predict Now
+        </a>
+        <a href="/dashboard" class="btn btn-outline-secondary btn-lg">
+            <i class="bi bi-speedometer2"></i> View Dashboard
+        </a>
+    </div>
+    <div class="col-lg-6 text-center">
+        <img src="https://cdn-icons-png.flaticon.com/512/4341/4341160.png"
+             alt="AI Prediction" style="max-width: 350px; width: 100%;">
+    </div>
+</div>
+
+<hr class="my-5">
+
+<!-- Stats Row -->
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="card stat-card p-4 text-center"
+             style="border-left-color: #667eea;">
+            <i class="bi bi-people-fill fs-1 mb-2" style="color:#667eea;"></i>
+            <h3 class="fw-bold">3</h3>
+            <p class="text-muted mb-0">ML Models</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card p-4 text-center"
+             style="border-left-color: #38a169;">
+            <i class="bi bi-bullseye fs-1 mb-2" style="color:#38a169;"></i>
+            <h3 class="fw-bold">95%+</h3>
+            <p class="text-muted mb-0">Accuracy</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card p-4 text-center"
+             style="border-left-color: #d69e2e;">
+            <i class="bi bi-lightning-charge-fill fs-1 mb-2"
+               style="color:#d69e2e;"></i>
+            <h3 class="fw-bold">Real-Time</h3>
+            <p class="text-muted mb-0">Predictions</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card p-4 text-center"
+             style="border-left-color: #e53e3e;">
+            <i class="bi bi-shield-check-fill fs-1 mb-2"
+               style="color:#e53e3e;"></i>
+            <h3 class="fw-bold">3 Levels</h3>
+            <p class="text-muted mb-0">Risk Badges</p>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<h2 class="fw-bold text-center mb-4">What This System Does</h2>
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <div class="card p-4 h-100">
+            <i class="bi bi-person-lines-fill fs-2 mb-3"
+               style="color:#667eea;"></i>
+            <h5 class="fw-bold">Single Prediction</h5>
+            <p class="text-muted">
+                Enter one customer's details and instantly get a churn
+                probability score with a risk badge — Low, Medium, or High.
+            </p>
+            <a href="/predict" class="btn btn-predict mt-auto">
+                Try it <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-4 h-100">
+            <i class="bi bi-file-earmark-arrow-up-fill fs-2 mb-3"
+               style="color:#38a169;"></i>
+            <h5 class="fw-bold">Bulk CSV Upload</h5>
+            <p class="text-muted">
+                Upload a CSV file with hundreds of customers and get
+                predictions for all of them at once with downloadable results.
+            </p>
+            <a href="/bulk_upload" class="btn btn-predict mt-auto">
+                Upload <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-4 h-100">
+            <i class="bi bi-bar-chart-fill fs-2 mb-3"
+               style="color:#d69e2e;"></i>
+            <h5 class="fw-bold">Analytics Dashboard</h5>
+            <p class="text-muted">
+                View churn trends, model performance metrics, feature
+                importance charts, and retention recommendations.
+            </p>
+            <a href="/dashboard" class="btn btn-predict mt-auto">
+                Explore <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- How It Works Section -->
+<h2 class="fw-bold text-center mb-4">How It Works</h2>
+<div class="row g-3 mb-5">
+    <div class="col-md-3">
+        <div class="card p-4 text-center h-100">
+            <div class="rounded-circle d-inline-flex align-items-center
+                        justify-content-center mb-3 mx-auto"
+                 style="width:60px;height:60px;
+                        background:linear-gradient(135deg,#667eea,#764ba2);">
+                <span class="text-white fw-bold fs-4">1</span>
+            </div>
+            <h6 class="fw-bold">Enter Customer Data</h6>
+            <p class="text-muted small">
+                Fill in customer details like tenure, charges, and contract type.
+            </p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-4 text-center h-100">
+            <div class="rounded-circle d-inline-flex align-items-center
+                        justify-content-center mb-3 mx-auto"
+                 style="width:60px;height:60px;
+                        background:linear-gradient(135deg,#667eea,#764ba2);">
+                <span class="text-white fw-bold fs-4">2</span>
+            </div>
+            <h6 class="fw-bold">ML Model Runs</h6>
+            <p class="text-muted small">
+                XGBoost model processes the data and calculates churn probability.
+            </p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-4 text-center h-100">
+            <div class="rounded-circle d-inline-flex align-items-center
+                        justify-content-center mb-3 mx-auto"
+                 style="width:60px;height:60px;
+                        background:linear-gradient(135deg,#667eea,#764ba2);">
+                <span class="text-white fw-bold fs-4">3</span>
+            </div>
+            <h6 class="fw-bold">Get Risk Badge</h6>
+            <p class="text-muted small">
+                Customer is labeled Low, Medium, or High risk with a color badge.
+            </p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-4 text-center h-100">
+            <div class="rounded-circle d-inline-flex align-items-center
+                        justify-content-center mb-3 mx-auto"
+                 style="width:60px;height:60px;
+                        background:linear-gradient(135deg,#667eea,#764ba2);">
+                <span class="text-white fw-bold fs-4">4</span>
+            </div>
+            <h6 class="fw-bold">Take Action</h6>
+            <p class="text-muted small">
+                Get retention recommendations — call, offer discount, or upgrade plan.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

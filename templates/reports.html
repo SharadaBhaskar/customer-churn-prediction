@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}Reports — ChurnPredict AI{% endblock %}
+
+{% block content %}
+
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="fw-bold">
+            <i class="bi bi-file-earmark-bar-graph" style="color:#667eea;"></i>
+            Reports & Exports
+        </h2>
+        <p class="text-muted">
+            Download prediction results and analytics reports
+        </p>
+    </div>
+</div>
+
+<!-- Export Cards -->
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <div class="card p-4 text-center h-100">
+            <i class="bi bi-file-earmark-pdf-fill fs-1 mb-3"
+               style="color:#e53e3e;"></i>
+            <h5 class="fw-bold">PDF Report</h5>
+            <p class="text-muted small">
+                Download a complete PDF report of all predictions
+                with charts and risk badges.
+            </p>
+            <a href="#" class="btn btn-predict mt-auto">
+                <i class="bi bi-download"></i> Download PDF
+            </a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-4 text-center h-100">
+            <i class="bi bi-file-earmark-excel-fill fs-1 mb-3"
+               style="color:#38a169;"></i>
+            <h5 class="fw-bold">Excel Report</h5>
+            <p class="text-muted small">
+                Export all prediction data to Excel for
+                further analysis and filtering.
+            </p>
+            <a href="#" class="btn btn-predict mt-auto">
+                <i class="bi bi-download"></i> Download Excel
+            </a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-4 text-center h-100">
+            <i class="bi bi-file-earmark-text-fill fs-1 mb-3"
+               style="color:#667eea;"></i>
+            <h5 class="fw-bold">CSV Export</h5>
+            <p class="text-muted small">
+                Export raw prediction data as CSV for
+                importing into other tools.
+            </p>
+            <a href="#" class="btn btn-predict mt-auto">
+                <i class="bi bi-download"></i> Download CSV
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Prediction History Table -->
+<div class="row mb-5">
+    <div class="col">
+        <div class="card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0">
+                    <i class="bi bi-table" style="color:#764ba2;"></i>
+                    Full Prediction History
+                </h5>
+                <div class="d-flex gap-2">
+                    <input type="text" id="searchInput"
+                           class="form-control form-control-sm"
+                           placeholder="Search customer..."
+                           onkeyup="searchTable()"
+                           style="width:200px;">
+                    <select class="form-select form-select-sm"
+                            id="riskFilter"
+                            onchange="filterRisk()"
+                            style="width:150px;">
+                        <option value="">All Risks</option>
+                        <option value="Low">Low Risk</option>
+                        <option value="Medium">Medium Risk</option>
+                        <option value="High">High Risk</option>
+                    </select>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle" id="historyTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Customer ID</th>
+                            <th>Tenure</th>
+                            <th>Monthly Charges</th>
+                            <th>Contract</th>
+                            <th>Risk Badge</th>
+                            <th>Probability</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="8"
+                                class="text-center text-muted py-4">
+                                <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                                No prediction history yet — go to
+                                <a href="/predict">Predict</a>
+                                to get started!
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Stats -->
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card p-4">
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-bar-chart" style="color:#667eea;"></i>
+                Monthly Churn Trend
+            </h5>
+            <canvas id="trendChart" height="200"></canvas>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card p-4">
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-pie-chart" style="color:#38a169;"></i>
+                Contract Type Distribution
+            </h5>
+            <canvas id="contractChart" height="200"></canvas>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Monthly Trend Chart
+    const trendCtx = document.getElementById('trendChart').getContext('2d');
+    new Chart(trendCtx, {
+        type: 'line',
+        data: {
+            labels: ['Jan','Feb','Mar','Apr','May','Jun'],
+            datasets: [{
+                label: 'Churn Rate %',
+                data: [18, 22, 19, 25, 21, 17],
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102,126,234,0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+
+    // Contract Chart
+    const contractCtx =
+        document.getElementById('contractChart').getContext('2d');
+    new Chart(contractCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Month-to-month','One year','Two year'],
+            datasets: [{
+                data: [55, 25, 20],
+                backgroundColor: ['#e53e3e','#667eea','#38a169'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    // Search function
+    function searchTable() {
+        const input = document.getElementById('searchInput').value
+                          .toLowerCase();
+        const rows = document.querySelectorAll('#historyTable tbody tr');
+        rows.forEach(row => {
+            row.style.display =
+                row.textContent.toLowerCase().includes(input) ? '' : 'none';
+        });
+    }
+
+    // Filter by risk
+    function filterRisk() {
+        const filter = document.getElementById('riskFilter').value
+                           .toLowerCase();
+        const rows = document.querySelectorAll('#historyTable tbody tr');
+        rows.forEach(row => {
+            row.style.display =
+                !filter ||
+                row.textContent.toLowerCase().includes(filter) ? '' : 'none';
+        });
+    }
+</script>
+{% endblock %}

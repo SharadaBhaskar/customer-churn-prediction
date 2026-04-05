@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — ChurnPredict AI{% endblock %}
+
+{% block content %}
+
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="fw-bold">
+            <i class="bi bi-speedometer2" style="color:#667eea;"></i>
+            Analytics Dashboard
+        </h2>
+        <p class="text-muted">Overview of churn statistics and model performance</p>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="card stat-card p-4 text-center"
+             style="border-left-color:#667eea;">
+            <i class="bi bi-people-fill fs-1 mb-2" style="color:#667eea;"></i>
+            <h3 class="fw-bold" id="total-customers">0</h3>
+            <p class="text-muted mb-0">Total Predictions</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card p-4 text-center"
+             style="border-left-color:#e53e3e;">
+            <i class="bi bi-person-x-fill fs-1 mb-2"
+               style="color:#e53e3e;"></i>
+            <h3 class="fw-bold" id="churn-count">0</h3>
+            <p class="text-muted mb-0">High Risk Customers</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card p-4 text-center"
+             style="border-left-color:#38a169;">
+            <i class="bi bi-person-check-fill fs-1 mb-2"
+               style="color:#38a169;"></i>
+            <h3 class="fw-bold" id="safe-count">0</h3>
+            <p class="text-muted mb-0">Low Risk Customers</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card p-4 text-center"
+             style="border-left-color:#d69e2e;">
+            <i class="bi bi-percent fs-1 mb-2" style="color:#d69e2e;"></i>
+            <h3 class="fw-bold" id="churn-rate">0%</h3>
+            <p class="text-muted mb-0">Churn Rate</p>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-4 mb-5">
+    <!-- Churn Distribution Pie Chart -->
+    <div class="col-md-6">
+        <div class="card p-4">
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-pie-chart-fill" style="color:#667eea;"></i>
+                Churn Risk Distribution
+            </h5>
+            <canvas id="churnPieChart" height="250"></canvas>
+        </div>
+    </div>
+
+    <!-- Risk Badge Bar Chart -->
+    <div class="col-md-6">
+        <div class="card p-4">
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-bar-chart-fill" style="color:#38a169;"></i>
+                Risk Badge Breakdown
+            </h5>
+            <canvas id="riskBarChart" height="250"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Predictions Table -->
+<div class="row mb-5">
+    <div class="col">
+        <div class="card p-4">
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-clock-history" style="color:#764ba2;"></i>
+                Recent Predictions
+            </h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Customer ID</th>
+                            <th>Tenure</th>
+                            <th>Monthly Charges</th>
+                            <th>Contract</th>
+                            <th>Risk Badge</th>
+                            <th>Probability</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="predictions-table">
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                                No predictions yet — go to
+                                <a href="/predict">Predict</a> to get started!
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Model Performance -->
+<div class="row mb-4">
+    <div class="col">
+        <div class="card p-4">
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-trophy-fill" style="color:#d69e2e;"></i>
+                Model Performance Metrics
+            </h5>
+            <div class="table-responsive">
+                <table class="table table-bordered text-center">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Model</th>
+                            <th>Accuracy</th>
+                            <th>Precision</th>
+                            <th>Recall</th>
+                            <th>F1-Score</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="fw-semibold">Logistic Regression</td>
+                            <td>80.2%</td>
+                            <td>78.5%</td>
+                            <td>76.3%</td>
+                            <td>77.4%</td>
+                            <td><span class="badge bg-secondary">Baseline</span></td>
+                        </tr>
+                        <tr>
+                            <td class="fw-semibold">Random Forest</td>
+                            <td>87.4%</td>
+                            <td>85.1%</td>
+                            <td>83.7%</td>
+                            <td>84.4%</td>
+                            <td><span class="badge bg-primary">Good</span></td>
+                        </tr>
+                        <tr class="table-success">
+                            <td class="fw-semibold">
+                                XGBoost
+                                <i class="bi bi-star-fill text-warning"></i>
+                            </td>
+                            <td>91.3%</td>
+                            <td>89.7%</td>
+                            <td>88.2%</td>
+                            <td>88.9%</td>
+                            <td>
+                                <span class="badge bg-success">
+                                    Best Model
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Churn Pie Chart
+    const pieCtx = document.getElementById('churnPieChart').getContext('2d');
+    new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Low Risk', 'Medium Risk', 'High Risk'],
+            datasets: [{
+                data: [60, 25, 15],
+                backgroundColor: ['#38a169', '#d69e2e', '#e53e3e'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+
+    // Risk Bar Chart
+    const barCtx = document.getElementById('riskBarChart').getContext('2d');
+    new Chart(barCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Low Risk', 'Medium Risk', 'High Risk'],
+            datasets: [{
+                label: 'Number of Customers',
+                data: [60, 25, 15],
+                backgroundColor: ['#38a169', '#d69e2e', '#e53e3e'],
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+</script>
+{% endblock %}

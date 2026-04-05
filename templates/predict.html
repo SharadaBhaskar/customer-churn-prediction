@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Predict Churn — ChurnPredict AI{% endblock %}
+
+{% block content %}
+
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="fw-bold">
+            <i class="bi bi-person-check" style="color:#667eea;"></i>
+            Single Customer Prediction
+        </h2>
+        <p class="text-muted">Enter customer details below to predict churn probability</p>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Prediction Form -->
+    <div class="col-lg-7">
+        <div class="card p-4">
+            <form method="POST" action="/predict">
+
+                <!-- Customer ID -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Customer ID</label>
+                    <input type="text" name="customer_id" class="form-control"
+                           placeholder="e.g. CUST-001" required>
+                </div>
+
+                <div class="row">
+                    <!-- Tenure -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">
+                            Tenure (months)
+                        </label>
+                        <input type="number" name="tenure" class="form-control"
+                               placeholder="e.g. 24" min="0" max="72" required>
+                    </div>
+
+                    <!-- Monthly Charges -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">
+                            Monthly Charges ($)
+                        </label>
+                        <input type="number" name="monthly_charges"
+                               class="form-control" placeholder="e.g. 65.50"
+                               step="0.01" min="0" required>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Total Charges -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">
+                            Total Charges ($)
+                        </label>
+                        <input type="number" name="total_charges"
+                               class="form-control" placeholder="e.g. 1500.00"
+                               step="0.01" min="0" required>
+                    </div>
+
+                    <!-- Number of Products -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">
+                            Number of Products
+                        </label>
+                        <input type="number" name="num_products"
+                               class="form-control" placeholder="e.g. 2"
+                               min="1" max="10" required>
+                    </div>
+                </div>
+
+                <!-- Contract Type -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Contract Type</label>
+                    <select name="contract_type" class="form-select" required>
+                        <option value="">-- Select Contract --</option>
+                        <option value="Month-to-month">Month-to-month</option>
+                        <option value="One year">One year</option>
+                        <option value="Two year">Two year</option>
+                    </select>
+                </div>
+
+                <!-- Internet Service -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Internet Service</label>
+                    <select name="internet_service" class="form-select" required>
+                        <option value="">-- Select Service --</option>
+                        <option value="DSL">DSL</option>
+                        <option value="Fiber optic">Fiber optic</option>
+                        <option value="No">No Internet</option>
+                    </select>
+                </div>
+
+                <!-- Payment Method -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Payment Method</label>
+                    <select name="payment_method" class="form-select" required>
+                        <option value="">-- Select Payment --</option>
+                        <option value="Electronic check">Electronic check</option>
+                        <option value="Mailed check">Mailed check</option>
+                        <option value="Bank transfer">Bank transfer</option>
+                        <option value="Credit card">Credit card</option>
+                    </select>
+                </div>
+
+                <!-- Senior Citizen -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Senior Citizen?</label>
+                    <select name="senior_citizen" class="form-select" required>
+                        <option value="">-- Select --</option>
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
+                </div>
+
+                <!-- Has Partner -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Has Partner?</label>
+                    <select name="partner" class="form-select" required>
+                        <option value="">-- Select --</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-predict w-100 mt-2">
+                    <i class="bi bi-lightning-charge"></i>
+                    Predict Churn Risk
+                </button>
+
+            </form>
+        </div>
+    </div>
+
+    <!-- Info Panel -->
+    <div class="col-lg-5">
+        <div class="card p-4 mb-4"
+             style="background: linear-gradient(135deg,#667eea,#764ba2);
+                    color:white;">
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-info-circle"></i> Risk Badge Guide
+            </h5>
+            <div class="mb-3">
+                <span class="badge-low">Low Risk</span>
+                <p class="mt-2 mb-0 small">
+                    Churn probability below 30% — Customer is likely to stay.
+                </p>
+            </div>
+            <hr style="border-color:rgba(255,255,255,0.3);">
+            <div class="mb-3">
+                <span class="badge-medium">Medium Risk</span>
+                <p class="mt-2 mb-0 small">
+                    Churn probability 30–60% — Monitor and send offers.
+                </p>
+            </div>
+            <hr style="border-color:rgba(255,255,255,0.3);">
+            <div>
+                <span class="badge-high">High Risk</span>
+                <p class="mt-2 mb-0 small">
+                    Churn probability above 60% — Immediate action needed!
+                </p>
+            </div>
+        </div>
+
+        <div class="card p-4">
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-lightbulb" style="color:#d69e2e;"></i>
+                Tips for Accuracy
+            </h5>
+            <ul class="list-unstyled">
+                <li class="mb-2">
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                    Enter exact monthly charges
+                </li>
+                <li class="mb-2">
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                    Tenure in completed months
+                </li>
+                <li class="mb-2">
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                    Select correct contract type
+                </li>
+                <li class="mb-2">
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                    Total = Monthly × Tenure
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
