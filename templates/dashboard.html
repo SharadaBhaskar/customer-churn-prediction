@@ -10,17 +10,18 @@
             <i class="bi bi-speedometer2" style="color:#667eea;"></i>
             Analytics Dashboard
         </h2>
-        <p class="text-muted">Overview of churn statistics and model performance</p>
+        <p class="text-muted">Live overview of churn statistics</p>
     </div>
 </div>
 
-<!-- Stats Cards -->
+<!-- Live Stats Cards -->
 <div class="row g-4 mb-5">
     <div class="col-md-3">
         <div class="card stat-card p-4 text-center"
              style="border-left-color:#667eea;">
-            <i class="bi bi-people-fill fs-1 mb-2" style="color:#667eea;"></i>
-            <h3 class="fw-bold" id="total-customers">0</h3>
+            <i class="bi bi-people-fill fs-1 mb-2"
+               style="color:#667eea;"></i>
+            <h3 class="fw-bold">{{ total }}</h3>
             <p class="text-muted mb-0">Total Predictions</p>
         </div>
     </div>
@@ -29,7 +30,7 @@
              style="border-left-color:#e53e3e;">
             <i class="bi bi-person-x-fill fs-1 mb-2"
                style="color:#e53e3e;"></i>
-            <h3 class="fw-bold" id="churn-count">0</h3>
+            <h3 class="fw-bold">{{ high_risk }}</h3>
             <p class="text-muted mb-0">High Risk Customers</p>
         </div>
     </div>
@@ -38,15 +39,16 @@
              style="border-left-color:#38a169;">
             <i class="bi bi-person-check-fill fs-1 mb-2"
                style="color:#38a169;"></i>
-            <h3 class="fw-bold" id="safe-count">0</h3>
+            <h3 class="fw-bold">{{ low_risk }}</h3>
             <p class="text-muted mb-0">Low Risk Customers</p>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card stat-card p-4 text-center"
              style="border-left-color:#d69e2e;">
-            <i class="bi bi-percent fs-1 mb-2" style="color:#d69e2e;"></i>
-            <h3 class="fw-bold" id="churn-rate">0%</h3>
+            <i class="bi bi-percent fs-1 mb-2"
+               style="color:#d69e2e;"></i>
+            <h3 class="fw-bold">{{ churn_rate }}%</h3>
             <p class="text-muted mb-0">Churn Rate</p>
         </div>
     </div>
@@ -58,7 +60,8 @@
     <div class="col-md-6">
         <div class="card p-4">
             <h5 class="fw-bold mb-3">
-                <i class="bi bi-pie-chart-fill" style="color:#667eea;"></i>
+                <i class="bi bi-pie-chart-fill"
+                   style="color:#667eea;"></i>
                 Churn Risk Distribution
             </h5>
             <canvas id="churnPieChart" height="250"></canvas>
@@ -69,7 +72,8 @@
     <div class="col-md-6">
         <div class="card p-4">
             <h5 class="fw-bold mb-3">
-                <i class="bi bi-bar-chart-fill" style="color:#38a169;"></i>
+                <i class="bi bi-bar-chart-fill"
+                   style="color:#38a169;"></i>
                 Risk Badge Breakdown
             </h5>
             <canvas id="riskBarChart" height="250"></canvas>
@@ -82,12 +86,13 @@
     <div class="col">
         <div class="card p-4">
             <h5 class="fw-bold mb-3">
-                <i class="bi bi-clock-history" style="color:#764ba2;"></i>
+                <i class="bi bi-clock-history"
+                   style="color:#764ba2;"></i>
                 Recent Predictions
             </h5>
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
-                    <thead class="table-light">
+                    <thead class="table-dark">
                         <tr>
                             <th>Customer ID</th>
                             <th>Tenure</th>
@@ -98,14 +103,63 @@
                             <th>Time</th>
                         </tr>
                     </thead>
-                    <tbody id="predictions-table">
-                        <tr>
-                            <td colspan="7" class="text-center text-muted py-4">
-                                <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-                                No predictions yet — go to
-                                <a href="/predict">Predict</a> to get started!
-                            </td>
-                        </tr>
+                    <tbody>
+                        {% if predictions %}
+                            {% for p in predictions[:10] %}
+                            <tr>
+                                <td class="fw-semibold">
+                                    {{ p.customer_id }}
+                                </td>
+                                <td>{{ p.tenure }} months</td>
+                                <td>${{ p.monthly_charges }}</td>
+                                <td>{{ p.contract_type }}</td>
+                                <td>
+                                    {% if p.risk_badge == 'High' %}
+                                        <span class="badge-high">High</span>
+                                    {% elif p.risk_badge == 'Medium' %}
+                                        <span class="badge-medium">
+                                            Medium
+                                        </span>
+                                    {% else %}
+                                        <span class="badge-low">Low</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="progress"
+                                         style="height:8px;width:80px;">
+                                        <div class="progress-bar
+                                            {% if p.risk_badge == 'High' %}
+                                                bg-danger
+                                            {% elif p.risk_badge == 'Medium' %}
+                                                bg-warning
+                                            {% else %}
+                                                bg-success
+                                            {% endif %}"
+                                            style="width:{{
+                                                p.churn_probability }}%">
+                                        </div>
+                                    </div>
+                                    <small>{{ p.churn_probability }}%</small>
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        {{ p.timestamp }}
+                                    </small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7"
+                                    class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox
+                                       fs-3 d-block mb-2"></i>
+                                    No predictions yet — go to
+                                    <a href="/predict">Predict</a>
+                                    to get started!
+                                </td>
+                            </tr>
+                        {% endif %}
                     </tbody>
                 </table>
             </div>
@@ -118,7 +172,8 @@
     <div class="col">
         <div class="card p-4">
             <h5 class="fw-bold mb-3">
-                <i class="bi bi-trophy-fill" style="color:#d69e2e;"></i>
+                <i class="bi bi-trophy-fill"
+                   style="color:#d69e2e;"></i>
                 Model Performance Metrics
             </h5>
             <div class="table-responsive">
@@ -135,34 +190,39 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td class="fw-semibold">Logistic Regression</td>
-                            <td>80.2%</td>
-                            <td>78.5%</td>
-                            <td>76.3%</td>
-                            <td>77.4%</td>
-                            <td><span class="badge bg-secondary">Baseline</span></td>
+                            <td class="fw-semibold">
+                                Logistic Regression
+                            </td>
+                            <td>78.54%</td>
+                            <td>62.3%</td>
+                            <td>50.2%</td>
+                            <td>55.06%</td>
+                            <td>
+                                <span class="badge bg-secondary">
+                                    Baseline
+                                </span>
+                            </td>
                         </tr>
                         <tr>
                             <td class="fw-semibold">Random Forest</td>
-                            <td>87.4%</td>
-                            <td>85.1%</td>
-                            <td>83.7%</td>
-                            <td>84.4%</td>
-                            <td><span class="badge bg-primary">Good</span></td>
-                        </tr>
-                        <tr class="table-success">
-                            <td class="fw-semibold">
-                                XGBoost
-                                <i class="bi bi-star-fill text-warning"></i>
-                            </td>
-                            <td>91.3%</td>
-                            <td>89.7%</td>
-                            <td>88.2%</td>
-                            <td>88.9%</td>
+                            <td>79.18%</td>
+                            <td>63.1%</td>
+                            <td>49.1%</td>
+                            <td>55.40%</td>
                             <td>
                                 <span class="badge bg-success">
-                                    Best Model
+                                    Best Model ⭐
                                 </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="fw-semibold">XGBoost</td>
+                            <td>76.40%</td>
+                            <td>58.9%</td>
+                            <td>47.2%</td>
+                            <td>52.30%</td>
+                            <td>
+                                <span class="badge bg-primary">Good</span>
                             </td>
                         </tr>
                     </tbody>
@@ -176,47 +236,53 @@
 
 {% block extra_js %}
 <script>
+    // Live data from Flask
+    const highRisk   = {{ high_risk }};
+    const lowRisk    = {{ low_risk }};
+    const total      = {{ total }};
+    const mediumRisk = total - highRisk - lowRisk;
+
     // Churn Pie Chart
-    const pieCtx = document.getElementById('churnPieChart').getContext('2d');
+    const pieCtx =
+        document.getElementById('churnPieChart').getContext('2d');
     new Chart(pieCtx, {
         type: 'doughnut',
         data: {
             labels: ['Low Risk', 'Medium Risk', 'High Risk'],
             datasets: [{
-                data: [60, 25, 15],
+                data: [lowRisk,
+                       mediumRisk > 0 ? mediumRisk : 0,
+                       highRisk],
                 backgroundColor: ['#38a169', '#d69e2e', '#e53e3e'],
                 borderWidth: 2
             }]
         },
         options: {
             responsive: true,
-            plugins: {
-                legend: { position: 'bottom' }
-            }
+            plugins: { legend: { position: 'bottom' } }
         }
     });
 
     // Risk Bar Chart
-    const barCtx = document.getElementById('riskBarChart').getContext('2d');
+    const barCtx =
+        document.getElementById('riskBarChart').getContext('2d');
     new Chart(barCtx, {
         type: 'bar',
         data: {
             labels: ['Low Risk', 'Medium Risk', 'High Risk'],
             datasets: [{
                 label: 'Number of Customers',
-                data: [60, 25, 15],
+                data: [lowRisk,
+                       mediumRisk > 0 ? mediumRisk : 0,
+                       highRisk],
                 backgroundColor: ['#38a169', '#d69e2e', '#e53e3e'],
                 borderRadius: 8
             }]
         },
         options: {
             responsive: true,
-            plugins: {
-                legend: { display: false }
-            },
-            scales: {
-                y: { beginAtZero: true }
-            }
+            plugins: { legend: { display: false } },
+            scales:  { y: { beginAtZero: true } }
         }
     });
 </script>
