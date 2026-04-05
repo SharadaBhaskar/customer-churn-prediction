@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block title %}Bulk Results — ChurnPredict AI{% endblock %}
+
+{% block content %}
+
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="fw-bold">
+            <i class="bi bi-file-earmark-check" style="color:#667eea;"></i>
+            Bulk Prediction Results
+        </h2>
+        <p class="text-muted">
+            Results for file: <strong>{{ filename }}</strong>
+        </p>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="card stat-card p-4 text-center"
+             style="border-left-color:#667eea;">
+            <i class="bi bi-people-fill fs-1 mb-2"
+               style="color:#667eea;"></i>
+            <h3 class="fw-bold">{{ total }}</h3>
+            <p class="text-muted mb-0">Total Customers</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card p-4 text-center"
+             style="border-left-color:#e53e3e;">
+            <i class="bi bi-person-x-fill fs-1 mb-2"
+               style="color:#e53e3e;"></i>
+            <h3 class="fw-bold">{{ churn_count }}</h3>
+            <p class="text-muted mb-0">High Risk</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card p-4 text-center"
+             style="border-left-color:#38a169;">
+            <i class="bi bi-person-check-fill fs-1 mb-2"
+               style="color:#38a169;"></i>
+            <h3 class="fw-bold">{{ total - churn_count }}</h3>
+            <p class="text-muted mb-0">Low/Medium Risk</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card p-4 text-center"
+             style="border-left-color:#d69e2e;">
+            <i class="bi bi-percent fs-1 mb-2"
+               style="color:#d69e2e;"></i>
+            <h3 class="fw-bold">
+                {% if total > 0 %}
+                    {{ ((churn_count / total) * 100) | round(1) }}%
+                {% else %}
+                    0%
+                {% endif %}
+            </h3>
+            <p class="text-muted mb-0">Churn Rate</p>
+        </div>
+    </div>
+</div>
+
+<!-- Results Table -->
+<div class="row mb-4">
+    <div class="col">
+        <div class="card p-4">
+            <div class="d-flex justify-content-between
+                        align-items-center mb-3">
+                <h5 class="fw-bold mb-0">
+                    <i class="bi bi-table" style="color:#764ba2;"></i>
+                    Detailed Results
+                </h5>
+                <div class="d-flex gap-2">
+                    <input type="text" id="searchInput"
+                           class="form-control form-control-sm"
+                           placeholder="Search..."
+                           onkeyup="searchTable()"
+                           style="width:180px;">
+                    <select class="form-select form-select-sm"
+                            id="riskFilter"
+                            onchange="filterRisk()"
+                            style="width:140px;">
+                        <option value="">All Risks</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle"
+                       id="resultsTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Customer ID</th>
+                            <th>Probability</th>
+                            <th>Risk Badge</th>
+                            <th>Prediction</th>
+                            <th>Loyalty</th>
+                            <th>Discount</th>
+                            <th>Top Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in results %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td class="fw-semibold">
+                                {{ r.customer_id }}
+                            </td>
+                            <td>
+                                <div class="progress"
+                                     style="height:8px;width:80px;">
+                                    <div class="progress-bar
+                                        {% if r.risk_badge == 'High' %}
+                                            bg-danger
+                                        {% elif r.risk_badge == 'Medium' %}
+                                            bg-warning
+                                        {% else %}
+                                            bg-success
+                                        {% endif %}"
+                                        style="width:{{ r.probability }}%">
+                                    </div>
+                                </div>
+                                <small>{{ r.probability }}%</small>
+                            </td>
+                            <td>
+                                {% if r.risk_badge == 'High' %}
+                                    <span class="badge-high">
+                                        High
+                                    </span>
+                                {% elif r.risk_badge == 'Medium' %}
+                                    <span class="badge-medium">
+                                        Medium
+                                    </span>
+                                {% else %}
+                                    <span class="badge-low">
+                                        Low
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if r.prediction == 'Churn' %}
+                                    <span class="text-danger fw-semibold">
+                                        ⚠️ Churn
+                                    </span>
+                                {% else %}
+                                    <span class="text-success fw-semibold">
+                                        ✅ Stay
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge
+                                    {% if r.loyalty.level == 'Platinum' %}
+                                        bg-primary
+                                    {% elif r.loyalty.level == 'Gold' %}
+                                        bg-warning text-dark
+                                    {% elif r.loyalty.level == 'Silver' %}
+                                        bg-secondary
+                                    {% else %}
+                                        bg-dark
+                                    {% endif %}">
+                                    {{ r.loyalty.level }}
+                                    ({{ r.loyalty.score }})
+                                </span>
+                            </td>
+                            <td>
+                                {% if r.discount.percentage > 0 %}
+                                    <span class="text-success fw-semibold">
+                                        {{ r.discount.percentage }}% off
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">None</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small class="text-muted">
+                                    {{ r.actions[0] if r.actions else 'N/A' }}
+                                </small>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="row">
+    <div class="col text-center">
+        <a href="/bulk_upload" class="btn btn-predict btn-lg me-3">
+            <i class="bi bi-arrow-repeat"></i>
+            Upload Another File
+        </a>
+        <a href="/dashboard" class="btn btn-outline-secondary btn-lg me-3">
+            <i class="bi bi-speedometer2"></i>
+            View Dashboard
+        </a>
+        <a href="/reports" class="btn btn-outline-secondary btn-lg">
+            <i class="bi bi-file-earmark-bar-graph"></i>
+            View Reports
+        </a>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function searchTable() {
+        const input = document.getElementById('searchInput')
+                          .value.toLowerCase();
+        const rows  = document.querySelectorAll('#resultsTable tbody tr');
+        rows.forEach(row => {
+            row.style.display =
+                row.textContent.toLowerCase().includes(input) ? '' : 'none';
+        });
+    }
+
+    function filterRisk() {
+        const filter = document.getElementById('riskFilter')
+                           .value.toLowerCase();
+        const rows   = document.querySelectorAll('#resultsTable tbody tr');
+        rows.forEach(row => {
+            row.style.display =
+                !filter ||
+                row.textContent.toLowerCase().includes(filter) ? '' : 'none';
+        });
+    }
+</script>
+{% endblock %}

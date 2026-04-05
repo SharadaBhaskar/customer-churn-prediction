@@ -110,6 +110,104 @@ def dashboard():
 # ── Bulk Upload Route ─────────────────────────────────────────────────────────
 @app.route('/bulk_upload', methods=['GET', 'POST'])
 def bulk_upload():
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file selected!', 'danger')
+            return redirect(url_for('bulk_upload'))
+
+        file = request.files['file']
+
+        if file.filename == '':
+            flash('No file selected!', 'danger')
+            return redirect(url_for('bulk_upload'))
+
+        if not file.filename.endswith('.csv'):
+            flash('Only CSV files are allowed!', 'danger')
+            return redirect(url_for('bulk_upload'))
+
+        try:
+            import pandas as pd
+            from predict_engine import predict_churn
+
+            # Read CSV
+            df = pd.read_csv(file)
+
+            results      = []
+            churn_count  = 0
+            total        = len(df)
+
+            for _, row in df.iterrows():
+                customer_data = {
+                    'customer_id': row.get('customerID',
+                                   row.get('customer_id', 'N/A')),
+                    'gender':           row.get('gender', 'Male'),
+                    'senior_citizen':   row.get('SeniorCitizen',
+                                        row.get('senior_citizen', 0)),
+                    'partner':          row.get('Partner',
+                                        row.get('partner', 'No')),
+                    'dependents':       row.get('Dependents',
+                                        row.get('dependents', 'No')),
+                    'tenure':           row.get('tenure', 0),
+                    'phone_service':    row.get('PhoneService',
+                                        row.get('phone_service', 'Yes')),
+                    'multiple_lines':   row.get('MultipleLines',
+                                        row.get('multiple_lines',
+                                                'No phone service')),
+                    'internet_service': row.get('InternetService',
+                                        row.get('internet_service', 'DSL')),
+                    'online_security':  row.get('OnlineSecurity',
+                                        row.get('online_security', 'No')),
+                    'online_backup':    row.get('OnlineBackup',
+                                        row.get('online_backup', 'No')),
+                    'device_protection':row.get('DeviceProtection',
+                                        row.get('device_protection', 'No')),
+                    'tech_support':     row.get('TechSupport',
+                                        row.get('tech_support', 'No')),
+                    'streaming_tv':     row.get('StreamingTV',
+                                        row.get('streaming_tv', 'No')),
+                    'streaming_movies': row.get('StreamingMovies',
+                                        row.get('streaming_movies', 'No')),
+                    'contract_type':    row.get('Contract',
+                                        row.get('contract_type',
+                                                'Month-to-month')),
+                    'paperless_billing':row.get('PaperlessBilling',
+                                        row.get('paperless_billing', 'Yes')),
+                    'payment_method':   row.get('PaymentMethod',
+                                        row.get('payment_method',
+                                                'Electronic check')),
+                    'monthly_charges':  row.get('MonthlyCharges',
+                                        row.get('monthly_charges', 0)),
+                    'total_charges':    row.get('TotalCharges',
+                                        row.get('total_charges', 0))
+                }
+
+                result = predict_churn(customer_data)
+                if result['success']:
+                    results.append(result)
+                    if result['risk_badge'] == 'High':
+                        churn_count += 1
+
+            # Save bulk summary to database
+            conn   = sqlite3.connect(app.config['DATABASE_PATH'])
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO bulk_predictions
+                (filename, total_customers, churn_count, non_churn_count)
+                VALUES (?, ?, ?, ?)
+            ''', (file.filename, total, churn_count, total - churn_count))
+            conn.commit()
+            conn.close()
+
+            return render_template('bulk_result.html',
+                                   results=results,
+                                   total=total,
+                                   churn_count=churn_count,
+                                   filename=file.filename)
+
+        except Exception as e:
+            flash(f'Error processing file: {str(e)}', 'danger')
+            return redirect(url_for('bulk_upload'))
+
     return render_template('bulk_upload.html')
 
 # ── Reports Route ─────────────────────────────────────────────────────────────
