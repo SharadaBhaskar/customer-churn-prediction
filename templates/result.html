@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Prediction Result — ChurnPredict AI{% endblock %}
+
+{% block content %}
+
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="fw-bold">
+            <i class="bi bi-clipboard-data" style="color:#667eea;"></i>
+            Prediction Result
+        </h2>
+        <p class="text-muted">
+            Churn prediction for Customer ID:
+            <strong>{{ result.customer_id }}</strong>
+        </p>
+    </div>
+</div>
+
+<!-- Main Result Card -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card p-4 text-center h-100
+            {% if result.risk_badge == 'High' %}
+                border-danger
+            {% elif result.risk_badge == 'Medium' %}
+                border-warning
+            {% else %}
+                border-success
+            {% endif %}"
+            style="border-width: 3px !important;">
+
+            <!-- Risk Badge -->
+            <div class="mb-3">
+                {% if result.risk_badge == 'High' %}
+                    <span class="badge-high fs-5 px-4 py-2">
+                        🔴 HIGH RISK
+                    </span>
+                {% elif result.risk_badge == 'Medium' %}
+                    <span class="badge-medium fs-5 px-4 py-2">
+                        🟡 MEDIUM RISK
+                    </span>
+                {% else %}
+                    <span class="badge-low fs-5 px-4 py-2">
+                        🟢 LOW RISK
+                    </span>
+                {% endif %}
+            </div>
+
+            <!-- Probability -->
+            <h1 class="display-3 fw-bold
+                {% if result.risk_badge == 'High' %}
+                    text-danger
+                {% elif result.risk_badge == 'Medium' %}
+                    text-warning
+                {% else %}
+                    text-success
+                {% endif %}">
+                {{ result.probability }}%
+            </h1>
+            <p class="text-muted fs-5">Churn Probability</p>
+
+            <!-- Progress Bar -->
+            <div class="progress mb-3" style="height:20px;">
+                <div class="progress-bar
+                    {% if result.risk_badge == 'High' %}
+                        bg-danger
+                    {% elif result.risk_badge == 'Medium' %}
+                        bg-warning
+                    {% else %}
+                        bg-success
+                    {% endif %}"
+                    style="width: {{ result.probability }}%">
+                    {{ result.probability }}%
+                </div>
+            </div>
+
+            <!-- Prediction -->
+            <h4 class="fw-bold">
+                {% if result.prediction == 'Churn' %}
+                    ⚠️ This customer is likely to CHURN
+                {% else %}
+                    ✅ This customer is likely to STAY
+                {% endif %}
+            </h4>
+        </div>
+    </div>
+
+    <!-- Loyalty Score -->
+    <div class="col-md-6">
+        <div class="card p-4 h-100">
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-star-fill" style="color:#d69e2e;"></i>
+                Customer Loyalty Score
+            </h5>
+            <div class="text-center py-3">
+                <div class="display-4 fw-bold" style="color:#667eea;">
+                    {{ result.loyalty.score }}
+                </div>
+                <div class="fs-5 fw-semibold text-muted">out of 100</div>
+                <span class="badge fs-6 mt-2
+                    {% if result.loyalty.level == 'Platinum' %}
+                        bg-primary
+                    {% elif result.loyalty.level == 'Gold' %}
+                        bg-warning text-dark
+                    {% elif result.loyalty.level == 'Silver' %}
+                        bg-secondary
+                    {% else %}
+                        bg-dark
+                    {% endif %}">
+                    {{ result.loyalty.level }} Member
+                </span>
+            </div>
+            <hr>
+            <h6 class="fw-bold mb-2">
+                <i class="bi bi-tag" style="color:#38a169;"></i>
+                Discount Recommendation
+            </h6>
+            <div class="alert
+                {% if result.discount.percentage > 0 %}
+                    alert-warning
+                {% else %}
+                    alert-success
+                {% endif %} mb-0">
+                {% if result.discount.percentage > 0 %}
+                    <strong>{{ result.discount.percentage }}% Discount!</strong>
+                    Save ${{ result.discount.amount }}/month
+                    <br>
+                {% endif %}
+                <small>{{ result.discount.message }}</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Retention Actions & Top Features -->
+<div class="row g-4 mb-4">
+    <!-- Retention Actions -->
+    <div class="col-md-6">
+        <div class="card p-4 h-100">
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-list-check" style="color:#764ba2;"></i>
+                Retention Actions
+            </h5>
+            <ul class="list-unstyled">
+                {% for action in result.actions %}
+                <li class="mb-2 p-2 rounded"
+                    style="background:#f8f0ff;">
+                    {{ action }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Top Features -->
+    <div class="col-md-6">
+        <div class="card p-4 h-100">
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-bar-chart" style="color:#e53e3e;"></i>
+                Top Factors Driving This Prediction
+            </h5>
+            {% for feature in result.top_features %}
+            <div class="mb-2">
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="fw-semibold small">{{ feature }}</span>
+                    <span class="text-muted small">
+                        {{ loop.index * 15 }}%
+                    </span>
+                </div>
+                <div class="progress" style="height:10px;">
+                    <div class="progress-bar"
+                         style="width:{{ 100 - loop.index * 15 }}%;
+                                background:#667eea;">
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="row">
+    <div class="col text-center">
+        <a href="/predict" class="btn btn-predict btn-lg me-3">
+            <i class="bi bi-arrow-repeat"></i>
+            Predict Another Customer
+        </a>
+        <a href="/dashboard" class="btn btn-outline-secondary btn-lg me-3">
+            <i class="bi bi-speedometer2"></i>
+            View Dashboard
+        </a>
+        <a href="/reports" class="btn btn-outline-secondary btn-lg">
+            <i class="bi bi-file-earmark-bar-graph"></i>
+            View Reports
+        </a>
+    </div>
+</div>
+
+{% endblock %}
