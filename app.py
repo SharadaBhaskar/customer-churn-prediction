@@ -215,7 +215,188 @@ def bulk_upload():
 def reports():
     predictions = get_all_predictions()
     return render_template('reports.html', predictions=predictions)
+# ── Export PDF Route ──────────────────────────────────────────────────────────
+@app.route('/export/pdf')
+def export_pdf():
+    from reportlab.lib.pagesizes import letter, landscape
+    from reportlab.lib import colors
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.lib.styles import getSampleStyleSheet
+    from flask import Response
+    import io
 
+    predictions = get_all_predictions()
+    buffer      = io.BytesIO()
+    doc         = SimpleDocTemplate(buffer, pagesize=landscape(letter))
+    styles      = getSampleStyleSheet()
+    elements    = []
+
+    # Title
+    elements.append(Paragraph(
+        "ChurnPredict AI — Prediction Report", styles['Title']))
+    elements.append(Spacer(1, 20))
+
+    # Table headers
+    data = [['#', 'Customer ID', 'Tenure',
+             'Monthly $', 'Contract', 'Risk', 'Probability', 'Time']]
+
+    for i, p in enumerate(predictions[:50], 1):
+        data.append([
+            str(i),
+            str(p['customer_id']),
+            str(p['tenure']),
+            f"${p['monthly_charges']}",
+            str(p['contract_type']),
+            str(p['risk_badge']),
+            f"{p['churn_probability']}%",
+            str(p['timestamp'])[:16]
+        ])
+
+    # Table style
+    table = Table(data)
+    table.setStyle(TableStyle([
+        ('BACKGROUND',  (0,0), (-1,0), colors.HexColor('#667eea')),
+        ('TEXTCOLOR',   (0,0), (-1,0), colors.white),
+        ('FONTNAME',    (0,0), (-1,0), 'Helvetica-Bold'),
+        ('FONTSIZE',    (0,0), (-1,0), 11),
+        ('ALIGN',       (0,0), (-1,-1), 'CENTER'),
+        ('ROWBACKGROUNDS', (0,1), (-1,-1),
+         [colors.white, colors.HexColor('#f8f9fa')]),
+        ('GRID',        (0,0), (-1,-1), 0.5, colors.grey),
+        ('FONTSIZE',    (0,1), (-1,-1), 9),
+    ]))
+
+    elements.append(table)
+    doc.build(elements)
+    buffer.seek(0)
+
+    return Response(
+        buffer.getvalue(),
+        mimetype='application/pdf',
+        headers={'Content-Disposition':
+                 'attachment; filename=churn_report.pdf'}
+    )
+
+# ── Export Excel Route ────────────────────────────────────────────────────────
+@app.route('/export/excel')
+def export_excel():
+    from openpyxl import Workbook
+    from openpyxl.styles import PatternFill, Font, Alignment
+    from flask import Response
+    import io
+
+    predictions = get_all_predictions()
+    wb          = Workbook()
+    ws          = wb.active
+    ws.title    = 'Churn Predictions'
+
+    # Header style
+    header_fill = PatternFill(start_color='667eea',
+                               end_color='667eea',
+                               fill_type='solid')
+    header_font = Font(color='FFFFFF', bold=True)
+
+    # Headers
+    headers = ['#', 'Customer ID', 'Tenure', 'Monthly Charges',
+               'Total Charges', 'Contract', 'Internet Service',
+               'Payment Method', 'Risk Badge',
+               'Churn Probability', 'Timestamp']
+    for col, header in enumerate(headers, 1):
+        cell              = ws.cell(row=1, column=col, value=header)
+        cell.fill         = header_fill
+        cell.font         = header_font
+        cell.alignment    = Alignment(horizontal='center')
+
+    # Data rows
+    for i, p in enumerate(predictions, 2):
+        ws.cell(row=i, column=1,  value=i-1)
+        ws.cell(row=i, column=2,  value=p['customer_id'])
+        ws.cell(row=i, column=3,  value=p['tenure'])
+        ws.cell(row=i, column=4,  value=p['monthly_charges'])
+        ws.cell(row=i, column=5,  value=p['total_charges'])
+        ws.cell(row=i, column=6,  value=p['contract_type'])
+        ws.cell(row=i, column=7,  value=p['internet_service'])
+        ws.cell(row=i, column=8,  value=p['payment_method'])
+        ws.cell(row=i, column=9,  value=p['risk_badge'])
+        ws.cell(row=i, column=10, value=p['churn_probability'])
+        ws.cell(row=i, column=11, value=str(p['timestamp']))
+
+        # Color code risk badge
+        risk_cell = ws.cell(row=i, column=9)
+        if p['risk_badge'] == 'High':
+            risk_cell.fill = PatternFill(start_color='FFE0E0',
+                                          end_color='FFE0E0',
+                                          fill_type='solid')
+        elif p['risk_badge'] == 'Medium':
+            risk_cell.fill = PatternFill(start_color='FFF3CD',
+                                          end_color='FFF3CD',
+                                          fill_type='solid')
+        else:
+            risk_cell.fill = PatternFill(start_color='D4EDDA',
+                                          end_color='D4EDDA',
+                                          fill_type='solid')
+
+    # Auto-fit columns
+    for col in ws.columns:
+        max_length = 0
+        for cell in col:
+            if cell.value:
+                max_length = max(max_length, len(str(cell.value)))
+        ws.column_dimensions[
+            col[0].column_letter].width = max_length + 4
+
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+
+    return Response(
+        buffer.getvalue(),
+        mimetype='application/vnd.openxmlformats-officedocument'
+                 '.spreadsheetml.sheet',
+        headers={'Content-Disposition':
+                 'attachment; filename=churn_report.xlsx'}
+    )
+
+# ── Export CSV Route ──────────────────────────────────────────────────────────
+@app.route('/export/csv')
+def export_csv():
+    import csv
+    import io
+    from flask import Response
+
+    predictions = get_all_predictions()
+    output      = io.StringIO()
+    writer      = csv.writer(output)
+
+    # Header
+    writer.writerow(['#', 'Customer ID', 'Tenure', 'Monthly Charges',
+                     'Total Charges', 'Contract', 'Internet Service',
+                     'Payment Method', 'Risk Badge',
+                     'Churn Probability', 'Timestamp'])
+
+    # Data
+    for i, p in enumerate(predictions, 1):
+        writer.writerow([
+            i,
+            p['customer_id'],
+            p['tenure'],
+            p['monthly_charges'],
+            p['total_charges'],
+            p['contract_type'],
+            p['internet_service'],
+            p['payment_method'],
+            p['risk_badge'],
+            p['churn_probability'],
+            p['timestamp']
+        ])
+
+    output.seek(0)
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={'Content-Disposition':
+                 'attachment; filename=churn_report.csv'}
+    )
 # ── About Route ───────────────────────────────────────────────────────────────
 @app.route('/about')
 def about():

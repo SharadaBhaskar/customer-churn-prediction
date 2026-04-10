@@ -83,6 +83,36 @@ def get_discount(risk_badge, monthly_charges):
             'message':    "No discount needed — customer is low risk."
         }
 
+# ── Revenue Loss Estimation ───────────────────────────────────────────────────
+def get_revenue_loss(probability, monthly_charges, tenure):
+    avg_lifetime     = 24
+    remaining_months = max(avg_lifetime - tenure, 6)
+    churn_prob       = probability / 100
+    potential_loss   = monthly_charges * remaining_months
+    expected_loss    = round(churn_prob * potential_loss, 2)
+
+    if expected_loss > 1000:
+        priority = 'Critical'
+        color    = 'danger'
+    elif expected_loss > 500:
+        priority = 'High'
+        color    = 'warning'
+    elif expected_loss > 200:
+        priority = 'Medium'
+        color    = 'info'
+    else:
+        priority = 'Low'
+        color    = 'success'
+
+    return {
+        'monthly_charges':  monthly_charges,
+        'remaining_months': remaining_months,
+        'potential_loss':   round(potential_loss, 2),
+        'expected_loss':    expected_loss,
+        'priority':         priority,
+        'color':            color
+    }
+
 # ── Loyalty Score ─────────────────────────────────────────────────────────────
 def get_loyalty_score(tenure, monthly_charges):
     tenure_score  = min(tenure / 72 * 50, 50)
@@ -97,6 +127,79 @@ def get_loyalty_score(tenure, monthly_charges):
     else:
         level = "Bronze"
     return {'score': score, 'level': level}
+
+# ── Customer Segmentation ─────────────────────────────────────────────────────
+def get_customer_segment(tenure, monthly_charges, probability):
+    if tenure > 48 and monthly_charges > 60:
+        segment = "Loyal"
+        color   = "success"
+        desc    = "Long-term high-value customer"
+    elif probability > 60:
+        segment = "At Risk"
+        color   = "danger"
+        desc    = "High churn probability — act now"
+    elif tenure < 6:
+        segment = "New"
+        color   = "info"
+        desc    = "Recently joined — needs onboarding"
+    elif monthly_charges < 30:
+        segment = "Budget"
+        color   = "secondary"
+        desc    = "Low spender — offer upgrade"
+    else:
+        segment = "Regular"
+        color   = "primary"
+        desc    = "Stable customer — maintain engagement"
+    return {'segment': segment, 'color': color, 'desc': desc}
+
+# ── Retention Campaign Generator ──────────────────────────────────────────────
+def get_retention_campaign(risk_badge, segment, monthly_charges, tenure):
+    campaigns = []
+    if risk_badge == 'High':
+        campaigns.append({
+            'type':    '📱 SMS Campaign',
+            'message': f"Special offer just for you! "
+                       f"Get 20% off your next bill. "
+                       f"Reply YES to activate.",
+            'timing':  'Send immediately'
+        })
+        campaigns.append({
+            'type':    '📧 Email Campaign',
+            'message': f"We value your {tenure} months "
+                       f"with us! Here's an exclusive "
+                       f"retention offer worth "
+                       f"${round(monthly_charges*0.2,2)}/month.",
+            'timing':  'Send within 24 hours'
+        })
+        campaigns.append({
+            'type':    '📞 Call Campaign',
+            'message': "Personal call from retention "
+                       "team to discuss upgrade options.",
+            'timing':  'Call within 48 hours'
+        })
+    elif risk_badge == 'Medium':
+        campaigns.append({
+            'type':    '📧 Email Campaign',
+            'message': "You're a valued customer! "
+                       "Enjoy 10% loyalty discount "
+                       "this month.",
+            'timing':  'Send within 3 days'
+        })
+        campaigns.append({
+            'type':    '📱 SMS Campaign',
+            'message': "Upgrade to annual plan and "
+                       "save 15% every month!",
+            'timing':  'Send within 1 week'
+        })
+    else:
+        campaigns.append({
+            'type':    '📧 Newsletter',
+            'message': "Monthly newsletter with "
+                       "tips and exclusive member "
+                       "benefits.",
+            'timing':  'Send monthly'
+        })
+    return campaigns
 
 # ── Main Prediction Function ──────────────────────────────────────────────────
 def predict_churn(customer_data):
@@ -151,12 +254,22 @@ def predict_churn(customer_data):
         contract_type   = customer_data.get('contract_type', 'Month-to-month')
         tenure          = int(customer_data.get('tenure', 0))
 
-        actions       = get_retention_actions(risk_badge,
-                                               contract_type,
-                                               monthly_charges)
-        discount      = get_discount(risk_badge, monthly_charges)
-        loyalty       = get_loyalty_score(tenure, monthly_charges)
-        top_features  = list(feature_importances.keys())[:5]
+        actions      = get_retention_actions(risk_badge,
+                                              contract_type,
+                                              monthly_charges)
+        discount     = get_discount(risk_badge, monthly_charges)
+        loyalty      = get_loyalty_score(tenure, monthly_charges)
+        revenue_loss = get_revenue_loss(probability,
+                                         monthly_charges,
+                                         tenure)
+        segment      = get_customer_segment(tenure,
+                                             monthly_charges,
+                                             probability)
+        campaigns    = get_retention_campaign(risk_badge,
+                                               segment['segment'],
+                                               monthly_charges,
+                                               tenure)
+        top_features = list(feature_importances.keys())[:5]
 
         # Save to database
         save_prediction(customer_data, prediction,
@@ -171,6 +284,9 @@ def predict_churn(customer_data):
             'actions':      actions,
             'discount':     discount,
             'loyalty':      loyalty,
+            'revenue_loss': revenue_loss,
+            'segment':      segment,
+            'campaigns':    campaigns,
             'top_features': top_features
         }
 

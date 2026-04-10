@@ -83,6 +83,17 @@
                     ✅ This customer is likely to STAY
                 {% endif %}
             </h4>
+
+            <!-- Customer Segment -->
+            <div class="mt-3">
+                <span class="badge bg-{{ result.segment.color }}
+                             fs-6 px-3 py-2">
+                    {{ result.segment.segment }} Customer
+                </span>
+                <p class="text-muted small mt-1 mb-0">
+                    {{ result.segment.desc }}
+                </p>
+            </div>
         </div>
     </div>
 
@@ -123,11 +134,67 @@
                     alert-success
                 {% endif %} mb-0">
                 {% if result.discount.percentage > 0 %}
-                    <strong>{{ result.discount.percentage }}% Discount!</strong>
+                    <strong>
+                        {{ result.discount.percentage }}% Discount!
+                    </strong>
                     Save ${{ result.discount.amount }}/month
                     <br>
                 {% endif %}
                 <small>{{ result.discount.message }}</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Revenue Loss Card -->
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="card p-4 border-{{ result.revenue_loss.color }}"
+             style="border-width:2px !important;">
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-currency-dollar"
+                   style="color:#e53e3e;"></i>
+                Predictive Revenue Loss Estimation
+            </h5>
+            <div class="row g-3 text-center">
+                <div class="col-md-3">
+                    <div class="card p-3 bg-light">
+                        <h6 class="text-muted small">Monthly Charges</h6>
+                        <h4 class="fw-bold text-primary">
+                            ${{ result.revenue_loss.monthly_charges }}
+                        </h4>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card p-3 bg-light">
+                        <h6 class="text-muted small">Remaining Months</h6>
+                        <h4 class="fw-bold text-info">
+                            {{ result.revenue_loss.remaining_months }}
+                        </h4>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card p-3 bg-light">
+                        <h6 class="text-muted small">Potential Loss</h6>
+                        <h4 class="fw-bold text-warning">
+                            ${{ result.revenue_loss.potential_loss }}
+                        </h4>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card p-3 bg-light">
+                        <h6 class="text-muted small">Expected Loss</h6>
+                        <h4 class="fw-bold text-danger">
+                            ${{ result.revenue_loss.expected_loss }}
+                        </h4>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-3">
+                <span class="badge bg-{{ result.revenue_loss.color }}
+                             fs-6 px-4 py-2">
+                    {{ result.revenue_loss.priority }} Priority Customer
+                </span>
             </div>
         </div>
     </div>
@@ -180,18 +247,51 @@
     </div>
 </div>
 
+<!-- Retention Campaign Generator -->
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="card p-4">
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-megaphone-fill"
+                   style="color:#667eea;"></i>
+                Personalized Retention Campaigns
+            </h5>
+            <div class="row g-3">
+                {% for campaign in result.campaigns %}
+                <div class="col-md-4">
+                    <div class="card p-3 h-100"
+                         style="border-left:4px solid #667eea;">
+                        <h6 class="fw-bold mb-2">
+                            {{ campaign.type }}
+                        </h6>
+                        <p class="text-muted small mb-2">
+                            {{ campaign.message }}
+                        </p>
+                        <span class="badge bg-info text-dark mt-auto">
+                            🕐 {{ campaign.timing }}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Action Buttons -->
-<div class="row">
+<div class="row mb-4">
     <div class="col text-center">
         <a href="/predict" class="btn btn-predict btn-lg me-3">
             <i class="bi bi-arrow-repeat"></i>
             Predict Another Customer
         </a>
-        <a href="/dashboard" class="btn btn-outline-secondary btn-lg me-3">
+        <a href="/dashboard"
+           class="btn btn-outline-secondary btn-lg me-3">
             <i class="bi bi-speedometer2"></i>
             View Dashboard
         </a>
-        <a href="/reports" class="btn btn-outline-secondary btn-lg">
+        <a href="/reports"
+           class="btn btn-outline-secondary btn-lg">
             <i class="bi bi-file-earmark-bar-graph"></i>
             View Reports
         </a>
