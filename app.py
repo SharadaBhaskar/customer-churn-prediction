@@ -43,6 +43,18 @@ def init_db():
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS feedback (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            customer_id TEXT,
+            feedback_text TEXT,
+            rating INTEGER,
+            sentiment TEXT,
+            polarity REAL,
+            subjectivity REAL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
     conn.commit()
     conn.close()
 
@@ -129,9 +141,7 @@ def bulk_upload():
             import pandas as pd
             from predict_engine import predict_churn
 
-            # Read CSV
-            df = pd.read_csv(file)
-
+            df           = pd.read_csv(file)
             results      = []
             churn_count  = 0
             total        = len(df)
@@ -187,7 +197,6 @@ def bulk_upload():
                     if result['risk_badge'] == 'High':
                         churn_count += 1
 
-            # Save bulk summary to database
             conn   = sqlite3.connect(app.config['DATABASE_PATH'])
             cursor = conn.cursor()
             cursor.execute('''
@@ -215,12 +224,14 @@ def bulk_upload():
 def reports():
     predictions = get_all_predictions()
     return render_template('reports.html', predictions=predictions)
+
 # ── Export PDF Route ──────────────────────────────────────────────────────────
 @app.route('/export/pdf')
 def export_pdf():
     from reportlab.lib.pagesizes import letter, landscape
     from reportlab.lib import colors
-    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.platypus import (SimpleDocTemplate, Table,
+                                    TableStyle, Paragraph, Spacer)
     from reportlab.lib.styles import getSampleStyleSheet
     from flask import Response
     import io
@@ -231,12 +242,10 @@ def export_pdf():
     styles      = getSampleStyleSheet()
     elements    = []
 
-    # Title
     elements.append(Paragraph(
         "ChurnPredict AI — Prediction Report", styles['Title']))
     elements.append(Spacer(1, 20))
 
-    # Table headers
     data = [['#', 'Customer ID', 'Tenure',
              'Monthly $', 'Contract', 'Risk', 'Probability', 'Time']]
 
@@ -252,7 +261,6 @@ def export_pdf():
             str(p['timestamp'])[:16]
         ])
 
-    # Table style
     table = Table(data)
     table.setStyle(TableStyle([
         ('BACKGROUND',  (0,0), (-1,0), colors.HexColor('#667eea')),
@@ -290,24 +298,21 @@ def export_excel():
     ws          = wb.active
     ws.title    = 'Churn Predictions'
 
-    # Header style
     header_fill = PatternFill(start_color='667eea',
                                end_color='667eea',
                                fill_type='solid')
     header_font = Font(color='FFFFFF', bold=True)
 
-    # Headers
     headers = ['#', 'Customer ID', 'Tenure', 'Monthly Charges',
                'Total Charges', 'Contract', 'Internet Service',
                'Payment Method', 'Risk Badge',
                'Churn Probability', 'Timestamp']
     for col, header in enumerate(headers, 1):
-        cell              = ws.cell(row=1, column=col, value=header)
-        cell.fill         = header_fill
-        cell.font         = header_font
-        cell.alignment    = Alignment(horizontal='center')
+        cell           = ws.cell(row=1, column=col, value=header)
+        cell.fill      = header_fill
+        cell.font      = header_font
+        cell.alignment = Alignment(horizontal='center')
 
-    # Data rows
     for i, p in enumerate(predictions, 2):
         ws.cell(row=i, column=1,  value=i-1)
         ws.cell(row=i, column=2,  value=p['customer_id'])
@@ -321,7 +326,6 @@ def export_excel():
         ws.cell(row=i, column=10, value=p['churn_probability'])
         ws.cell(row=i, column=11, value=str(p['timestamp']))
 
-        # Color code risk badge
         risk_cell = ws.cell(row=i, column=9)
         if p['risk_badge'] == 'High':
             risk_cell.fill = PatternFill(start_color='FFE0E0',
@@ -336,7 +340,6 @@ def export_excel():
                                           end_color='D4EDDA',
                                           fill_type='solid')
 
-    # Auto-fit columns
     for col in ws.columns:
         max_length = 0
         for cell in col:
@@ -368,26 +371,18 @@ def export_csv():
     output      = io.StringIO()
     writer      = csv.writer(output)
 
-    # Header
     writer.writerow(['#', 'Customer ID', 'Tenure', 'Monthly Charges',
                      'Total Charges', 'Contract', 'Internet Service',
                      'Payment Method', 'Risk Badge',
                      'Churn Probability', 'Timestamp'])
 
-    # Data
     for i, p in enumerate(predictions, 1):
         writer.writerow([
-            i,
-            p['customer_id'],
-            p['tenure'],
-            p['monthly_charges'],
-            p['total_charges'],
-            p['contract_type'],
-            p['internet_service'],
-            p['payment_method'],
-            p['risk_badge'],
-            p['churn_probability'],
-            p['timestamp']
+            i, p['customer_id'], p['tenure'],
+            p['monthly_charges'], p['total_charges'],
+            p['contract_type'], p['internet_service'],
+            p['payment_method'], p['risk_badge'],
+            p['churn_probability'], p['timestamp']
         ])
 
     output.seek(0)
@@ -397,6 +392,82 @@ def export_csv():
         headers={'Content-Disposition':
                  'attachment; filename=churn_report.csv'}
     )
+
+# ── Feedback Route ────────────────────────────────────────────────────────────
+@app.route('/feedback', methods=['GET', 'POST'])
+def feedback():
+    if request.method == 'POST':
+        try:
+            from textblob import TextBlob
+            customer_id   = request.form.get('customer_id', 'Anonymous')
+            feedback_text = request.form.get('feedback_text', '')
+            rating        = int(request.form.get('rating', 3))
+
+            blob         = TextBlob(feedback_text)
+            polarity     = blob.sentiment.polarity
+            subjectivity = blob.sentiment.subjectivity
+
+            if polarity > 0.2:
+                sentiment       = 'Positive'
+                sentiment_color = 'success'
+                emoji           = '😊'
+            elif polarity < -0.2:
+                sentiment       = 'Negative'
+                sentiment_color = 'danger'
+                emoji           = '😞'
+            else:
+                sentiment       = 'Neutral'
+                sentiment_color = 'warning'
+                emoji           = '😐'
+
+            conn = sqlite3.connect(app.config['DATABASE_PATH'])
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO feedback
+                (customer_id, feedback_text, rating,
+                 sentiment, polarity, subjectivity)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (customer_id, feedback_text, rating,
+                  sentiment, round(polarity, 3),
+                  round(subjectivity, 3)))
+            conn.commit()
+            conn.close()
+
+            result = {
+                'customer_id':     customer_id,
+                'feedback_text':   feedback_text,
+                'rating':          rating,
+                'sentiment':       sentiment,
+                'sentiment_color': sentiment_color,
+                'emoji':           emoji,
+                'polarity':        round(polarity, 3),
+                'subjectivity':    round(subjectivity, 3)
+            }
+            return render_template('feedback.html',
+                                   result=result,
+                                   submitted=True,
+                                   feedbacks=[])
+
+        except Exception as e:
+            flash(f'Error: {str(e)}', 'danger')
+            return redirect(url_for('feedback'))
+
+    try:
+        conn = sqlite3.connect(app.config['DATABASE_PATH'])
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT * FROM feedback ORDER BY timestamp DESC"
+        )
+        feedbacks = cursor.fetchall()
+        conn.close()
+    except:
+        feedbacks = []
+
+    return render_template('feedback.html',
+                           submitted=False,
+                           feedbacks=feedbacks,
+                           result=None)
+
 # ── About Route ───────────────────────────────────────────────────────────────
 @app.route('/about')
 def about():

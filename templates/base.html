@@ -187,6 +187,12 @@ body.dark-mode .bg-light {
                         </a>
                     </li>
                     <li class="nav-item">
+    <a class="nav-link {% if request.endpoint == 'feedback' %}active{% endif %}"
+       href="/feedback">
+        <i class="bi bi-chat-dots"></i> Feedback
+    </a>
+</li>
+                    <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'about' %}active{% endif %}"
                            href="/about">
                             <i class="bi bi-info-circle"></i> About

@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+
+{% block title %}Feedback Analysis — ChurnPredict AI{% endblock %}
+
+{% block content %}
+
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="fw-bold">
+            <i class="bi bi-chat-dots" style="color:#667eea;"></i>
+            Customer Feedback Analysis
+        </h2>
+        <p class="text-muted">
+            Collect and analyze customer feedback using
+            AI-powered sentiment analysis
+        </p>
+    </div>
+</div>
+
+{% if submitted %}
+<!-- Sentiment Result -->
+<div class="row g-4 mb-5">
+    <div class="col-md-6">
+        <div class="card p-4 text-center h-100
+                    border-{{ result.sentiment_color }}"
+             style="border-width:3px !important;">
+            <div class="display-1 mb-3">{{ result.emoji }}</div>
+            <h2 class="fw-bold text-{{ result.sentiment_color }}">
+                {{ result.sentiment }} Feedback
+            </h2>
+            <p class="text-muted">
+                from Customer: <strong>{{ result.customer_id }}</strong>
+            </p>
+            <hr>
+            <div class="row g-3 text-center">
+                <div class="col-6">
+                    <div class="card p-3 bg-light">
+                        <h6 class="text-muted small">Polarity Score</h6>
+                        <h4 class="fw-bold
+                            text-{{ result.sentiment_color }}">
+                            {{ result.polarity }}
+                        </h4>
+                        <small class="text-muted">
+                            -1 (negative) to +1 (positive)
+                        </small>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="card p-3 bg-light">
+                        <h6 class="text-muted small">
+                            Subjectivity Score
+                        </h6>
+                        <h4 class="fw-bold text-info">
+                            {{ result.subjectivity }}
+                        </h4>
+                        <small class="text-muted">
+                            0 (objective) to 1 (subjective)
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <!-- Star Rating -->
+            <div class="mt-2">
+                <h6 class="fw-bold">Customer Rating</h6>
+                {% for i in range(result.rating) %}
+                    <i class="bi bi-star-fill text-warning fs-4"></i>
+                {% endfor %}
+                {% for i in range(5 - result.rating) %}
+                    <i class="bi bi-star text-muted fs-4"></i>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card p-4 h-100">
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-chat-quote"
+                   style="color:#667eea;"></i>
+                Customer Feedback
+            </h5>
+            <div class="p-3 rounded mb-3"
+                 style="background:#f8f0ff;
+                        border-left:4px solid #667eea;">
+                <p class="mb-0 fst-italic">
+                    "{{ result.feedback_text }}"
+                </p>
+            </div>
+
+            <!-- Sentiment Meter -->
+            <h6 class="fw-bold mb-2">Sentiment Meter</h6>
+            <div class="progress mb-1" style="height:20px;">
+                {% set meter = ((result.polarity + 1) / 2 * 100)|int %}
+                <div class="progress-bar
+                            bg-{{ result.sentiment_color }}"
+                     style="width:{{ meter }}%">
+                    {{ meter }}%
+                </div>
+            </div>
+            <div class="d-flex justify-content-between">
+                <small class="text-danger">Very Negative</small>
+                <small class="text-muted">Neutral</small>
+                <small class="text-success">Very Positive</small>
+            </div>
+
+            <hr>
+            <!-- Recommendations -->
+            <h6 class="fw-bold mb-2">
+                <i class="bi bi-lightbulb"
+                   style="color:#d69e2e;"></i>
+                Recommended Actions
+            </h6>
+            {% if result.sentiment == 'Negative' %}
+            <ul class="list-unstyled">
+                <li class="mb-2 p-2 rounded bg-light">
+                    🚨 Escalate to customer support immediately
+                </li>
+                <li class="mb-2 p-2 rounded bg-light">
+                    📞 Personal callback within 24 hours
+                </li>
+                <li class="mb-2 p-2 rounded bg-light">
+                    💰 Offer compensation or special discount
+                </li>
+                <li class="mb-2 p-2 rounded bg-light">
+                    📋 Log complaint for quality improvement
+                </li>
+            </ul>
+            {% elif result.sentiment == 'Positive' %}
+            <ul class="list-unstyled">
+                <li class="mb-2 p-2 rounded bg-light">
+                    🌟 Request a public review or testimonial
+                </li>
+                <li class="mb-2 p-2 rounded bg-light">
+                    🎯 Offer referral program to this customer
+                </li>
+                <li class="mb-2 p-2 rounded bg-light">
+                    🎁 Send loyalty reward as thank you
+                </li>
+            </ul>
+            {% else %}
+            <ul class="list-unstyled">
+                <li class="mb-2 p-2 rounded bg-light">
+                    📧 Send follow-up satisfaction survey
+                </li>
+                <li class="mb-2 p-2 rounded bg-light">
+                    💡 Share new features or improvements
+                </li>
+                <li class="mb-2 p-2 rounded bg-light">
+                    🤝 Assign dedicated account manager
+                </li>
+            </ul>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="text-center mb-5">
+    <a href="/feedback" class="btn btn-predict btn-lg me-3">
+        <i class="bi bi-arrow-repeat"></i>
+        Analyze Another Feedback
+    </a>
+    <a href="/dashboard"
+       class="btn btn-outline-secondary btn-lg">
+        <i class="bi bi-speedometer2"></i>
+        View Dashboard
+    </a>
+</div>
+
+{% else %}
+<!-- Feedback Form -->
+<div class="row">
+    <div class="col-lg-7">
+        <div class="card p-4 mb-4">
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-pencil-square"
+                   style="color:#667eea;"></i>
+                Submit Customer Feedback
+            </h5>
+            <form method="POST" action="/feedback">
+                <!-- Customer ID -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">
+                        Customer ID
+                    </label>
+                    <input type="text" name="customer_id"
+                           class="form-control"
+                           placeholder="e.g. CUST-001" required>
+                </div>
+
+                <!-- Star Rating -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">
+                        Rating (1-5 Stars)
+                    </label>
+                    <select name="rating" class="form-select" required>
+                        <option value="">-- Select Rating --</option>
+                        <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
+                        <option value="4">⭐⭐⭐⭐ Good</option>
+                        <option value="3">⭐⭐⭐ Average</option>
+                        <option value="2">⭐⭐ Poor</option>
+                        <option value="1">⭐ Very Poor</option>
+                    </select>
+                </div>
+
+                <!-- Feedback Text -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">
+                        Customer Feedback / Review
+                    </label>
+                    <textarea name="feedback_text"
+                              class="form-control"
+                              rows="5"
+                              placeholder="Enter customer feedback here..."
+                              required></textarea>
+                    <small class="text-muted">
+                        The AI will analyze the sentiment of this text
+                    </small>
+                </div>
+
+                <button type="submit" class="btn btn-predict w-100">
+                    <i class="bi bi-cpu"></i>
+                    Analyze Sentiment
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Info Panel -->
+    <div class="col-lg-5">
+        <div class="card p-4 mb-4"
+             style="background:linear-gradient(135deg,#667eea,#764ba2);
+                    color:white;">
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-info-circle"></i>
+                How Sentiment Analysis Works
+            </h5>
+            <div class="mb-3">
+                <span class="badge bg-success fs-6 px-3">
+                    😊 Positive
+                </span>
+                <p class="mt-2 mb-0 small">
+                    Polarity score above 0.2 —
+                    Customer is happy and satisfied
+                </p>
+            </div>
+            <hr style="border-color:rgba(255,255,255,0.3);">
+            <div class="mb-3">
+                <span class="badge bg-warning text-dark fs-6 px-3">
+                    😐 Neutral
+                </span>
+                <p class="mt-2 mb-0 small">
+                    Polarity between -0.2 and 0.2 —
+                    Customer is indifferent
+                </p>
+            </div>
+            <hr style="border-color:rgba(255,255,255,0.3);">
+            <div>
+                <span class="badge bg-danger fs-6 px-3">
+                    😞 Negative
+                </span>
+                <p class="mt-2 mb-0 small">
+                    Polarity below -0.2 —
+                    Customer is unhappy — act immediately!
+                </p>
+            </div>
+        </div>
+
+        <!-- Recent Feedback Stats -->
+        <div class="card p-4">
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-clock-history"
+                   style="color:#764ba2;"></i>
+                Recent Feedback
+            </h5>
+            {% if feedbacks %}
+                {% for f in feedbacks[:5] %}
+                <div class="d-flex align-items-center
+                            justify-content-between mb-2 p-2 rounded
+                            bg-light">
+                    <div>
+                        <strong class="small">{{ f[1] }}</strong>
+                        <br>
+                        <small class="text-muted">
+                            {{ f[4] }}
+                        </small>
+                    </div>
+                    <span class="badge
+                        {% if f[4] == 'Positive' %}
+                            bg-success
+                        {% elif f[4] == 'Negative' %}
+                            bg-danger
+                        {% else %}
+                            bg-warning text-dark
+                        {% endif %}">
+                        {% if f[4] == 'Positive' %}😊
+                        {% elif f[4] == 'Negative' %}😞
+                        {% else %}😐{% endif %}
+                        {{ f[4] }}
+                    </span>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted text-center">
+                    <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                    No feedback yet!
+                </p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
