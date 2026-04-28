@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Campaigns — ChurnPredict</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+<div class="app-shell">
+  {% include 'layout/sidebar.html' %}
+  <div class="page-content">
+    {% include 'layout/navbar.html' %}
+    <div class="content-wrapper">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="breadcrumb"><a href="/dashboard">Home</a><i class="fas fa-chevron-right"></i>Campaigns</div>
+          <h1 class="page-title">Campaign Management</h1>
+          <p class="page-subtitle">Create and manage marketing campaigns</p>
+        </div>
+        <div class="page-header-actions">
+          <a href="/campaigns/results" class="btn btn-secondary"><i class="fas fa-chart-bar"></i> View Results</a>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:1.5rem;align-items:start">
+        <!-- Create Campaign -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-bullhorn" style="color:var(--brand)"></i> Create Campaign</div>
+          </div>
+          <div class="card-body">
+            <form method="POST" action="/campaigns/create">
+              <div class="form-group">
+                <label class="form-label">Campaign Name <span class="req">*</span></label>
+                <input type="text" name="campaign_name" class="form-control" placeholder="e.g. Summer Retention Drive" required>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Target Segment <span class="req">*</span></label>
+                  <select name="target_segment" class="form-control" required>
+                    <option value="">Select Segment</option>
+                    <option value="at_risk">At Risk Customers</option>
+                    <option value="churned">Churned Customers</option>
+                    <option value="high_value">High Value</option>
+                    <option value="new">New Customers</option>
+                    <option value="all">All Customers</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Campaign Type <span class="req">*</span></label>
+                  <select name="campaign_type" class="form-control" required>
+                    <option value="">Select Type</option>
+                    <option value="sms">SMS</option>
+                    <option value="email">Email</option>
+                    <option value="both">SMS + Email</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Message</label>
+                <textarea name="message" class="form-control" rows="4" placeholder="Campaign message…"></textarea>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Start Date <span class="req">*</span></label>
+                  <input type="date" name="start_date" class="form-control" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">End Date</label>
+                  <input type="date" name="end_date" class="form-control">
+                </div>
+              </div>
+              <button type="submit" class="btn btn-grad btn-lg w-full">
+                <i class="fas fa-rocket"></i> Create Campaign
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Recent Campaigns -->
+        <div style="display:flex;flex-direction:column;gap:1rem">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Recent Campaigns</div>
+              <a href="/campaigns/results" class="btn btn-ghost btn-sm">All <i class="fas fa-arrow-right"></i></a>
+            </div>
+            {% for c in campaigns | default([
+              {'name':'Win Back Q2','segment':'Churned','status':'Active','sent':580},
+              {'name':'Loyalty Drive','segment':'High Value','status':'Completed','sent':820},
+              {'name':'New User Onboard','segment':'New','status':'Active','sent':470}
+            ]) %}
+            <div class="report-item">
+              <div style="display:flex;align-items:center;gap:.75rem">
+                <div class="report-icon" style="background:var(--blue-bg);color:var(--blue)"><i class="fas fa-bullhorn"></i></div>
+                <div>
+                  <div style="font-weight:700;font-size:.875rem">{{ c.name }}</div>
+                  <div style="font-size:.78rem;color:var(--txt-3)">{{ c.segment }} · {{ c.sent }} sent</div>
+                </div>
+              </div>
+              <span class="badge {{ 'badge-green' if c.status=='Active' else 'badge-gray' }}">{{ c.status }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% include 'layout/footer.html' %}
+  </div>
+</div>
+<script>document.getElementById('page-title').textContent='Campaigns';</script>
+</body>
+</html>

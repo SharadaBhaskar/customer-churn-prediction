@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SMS Alerts — ChurnPredict</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+<div class="app-shell">
+  {% include 'layout/sidebar.html' %}
+  <div class="page-content">
+    {% include 'layout/navbar.html' %}
+    <div class="content-wrapper">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="breadcrumb"><a href="/dashboard">Home</a><i class="fas fa-chevron-right"></i>SMS Alerts</div>
+          <h1 class="page-title">Send SMS Alert</h1>
+          <p class="page-subtitle">Send personalized SMS messages to customers</p>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:1.5rem;align-items:start">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-sms" style="color:var(--brand)"></i> Compose SMS</div>
+          </div>
+          <div class="card-body">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% for cat,msg in messages %}
+                <div class="alert alert-{{ 'success' if cat=='success' else 'danger' }}"><i class="fas fa-{{ 'check-circle' if cat=='success' else 'times-circle' }}"></i> {{ msg }}</div>
+              {% endfor %}
+            {% endwith %}
+
+            <form method="POST" action="/sms-alert">
+              <div class="form-group">
+                <label class="form-label">Select Customers <span class="req">*</span></label>
+                <select name="customer_segment" class="form-control" required onchange="updatePreview()">
+                  <option value="">Choose target group</option>
+                  <option value="at_risk" {{ 'selected' if customer_segment=='at_risk' }}>At Risk Customers</option>
+                  <option value="churned">Churned Customers</option>
+                  <option value="high_value">High Value Customers</option>
+                  <option value="all">All Customers</option>
+                  <option value="specific">Specific Customer</option>
+                </select>
+                <div class="form-hint" id="count-hint">Select a segment to see recipient count</div>
+              </div>
+
+              <div class="form-group" id="specific-customer-group" style="display:none">
+                <label class="form-label">Customer Phone Number</label>
+                <input type="tel" name="specific_phone" class="form-control" placeholder="Enter phone number" value="{{ specific_phone | default('') }}">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Message <span class="req">*</span></label>
+                <textarea name="message" class="form-control" rows="5" placeholder="Type your message here…" maxlength="160" required id="sms-msg" onkeyup="countChars()">{{ message | default('Dear Customer, we value you! Please renew your plan to continue enjoying our services.') }}</textarea>
+                <div style="display:flex;justify-content:space-between" class="form-hint">
+                  <span>Use {name} to personalize with customer name</span>
+                  <span id="char-count">160 chars remaining</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Schedule</label>
+                <div class="form-row">
+                  <input type="date" name="schedule_date" class="form-control" value="{{ schedule_date | default('') }}">
+                  <input type="time" name="schedule_time" class="form-control" value="{{ schedule_time | default('') }}">
+                </div>
+                <div class="form-hint">Leave blank to send immediately</div>
+              </div>
+
+              <button type="submit" class="btn btn-grad btn-lg w-full">
+                <i class="fas fa-paper-plane"></i> Send SMS
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Preview -->
+        <div style="display:flex;flex-direction:column;gap:1rem">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Message Preview</div></div>
+            <div class="card-body">
+              <div style="background:#F1F5F9;border-radius:var(--r-lg);padding:1.25rem;position:relative">
+                <div style="font-size:.72rem;color:var(--txt-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem">ChurnPredict</div>
+                <p id="preview-text" style="font-size:.9rem;color:var(--txt-1);line-height:1.6">Dear Customer, we value you! Please renew your plan to continue enjoying our services.</p>
+                <div style="font-size:.72rem;color:var(--txt-3);margin-top:.75rem;text-align:right">Just now</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><div class="card-title">Quick Templates</div></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:.5rem">
+              {% for t in [
+                ('Renewal Reminder','Dear {name}, your plan expires soon. Renew today!'),
+                ('Discount Offer','Dear {name}, enjoy 20% off your next bill. Limited time!'),
+                ('Loyalty Reward','Dear {name}, you have earned 500 bonus points. Redeem now!'),
+                ('Win Back','Dear {name}, we miss you! Come back and enjoy exclusive offers.')
+              ] %}
+              <button type="button" class="btn btn-secondary btn-sm" style="text-align:left;justify-content:flex-start" onclick="useTemplate('{{ t[1] }}')">
+                <i class="fas fa-file-alt" style="color:var(--brand)"></i> {{ t[0] }}
+              </button>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% include 'layout/footer.html' %}
+  </div>
+</div>
+<script>
+const segCounts={'at_risk':590,'churned':460,'high_value':820,'all':2350,'specific':1};
+const segLabels={'at_risk':'At Risk Customers','churned':'Churned Customers','high_value':'High Value','all':'All Customers','specific':'Specific Customer'};
+
+function updatePreview(){
+  const sel=document.querySelector('[name=customer_segment]').value;
+  document.getElementById('specific-customer-group').style.display=sel==='specific'?'block':'none';
+  if(sel) document.getElementById('count-hint').textContent=(segCounts[sel]||0)+' recipients';
+  syncPreview();
+}
+function syncPreview(){
+  document.getElementById('preview-text').textContent=document.getElementById('sms-msg').value||'Your message will appear here…';
+}
+function countChars(){
+  const len=document.getElementById('sms-msg').value.length;
+  document.getElementById('char-count').textContent=(160-len)+' chars remaining';
+  syncPreview();
+}
+function useTemplate(text){
+  document.getElementById('sms-msg').value=text;
+  countChars();
+}
+document.getElementById('page-title').textContent='SMS Alerts';
+</script>
+</body>
+</html>

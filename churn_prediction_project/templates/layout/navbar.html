@@ -1,0 +1,292 @@
+<!-- templates/layout/navbar.html -->
+<header class="navbar" id="navbar">
+  <div class="navbar-left">
+    <button class="icon-btn" id="sidebar-toggle" style="display:none" onclick="document.getElementById('sidebar').classList.toggle('open')">
+      <i class="fas fa-bars"></i>
+    </button>
+    <div>
+      <div class="navbar-page-title" id="page-title">Dashboard</div>
+    </div>
+  </div>
+
+  <div class="navbar-right">
+    <div class="search-bar">
+      <i class="fas fa-search"></i>
+      <input type="text" placeholder="Search customers, campaigns…" id="global-search">
+    </div>
+
+    <!-- Notification Button -->
+    <div style="position:relative">
+      <button class="icon-btn" id="notif-btn" data-tooltip="Notifications" onclick="toggleNotif()">
+        <i class="fas fa-bell"></i>
+        <span class="badge-dot" id="notif-dot"></span>
+      </button>
+
+      <!-- Notification Dropdown -->
+      <div id="notif-dropdown" style="
+        display:none;position:absolute;right:0;top:calc(100% + 10px);
+        width:340px;background:var(--bg-card);border:1px solid var(--border);
+        border-radius:var(--r-lg);box-shadow:var(--sh-lg);z-index:500;overflow:hidden;
+      ">
+        <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+          <span style="font-weight:700;font-size:.95rem">Notifications</span>
+          <button onclick="markAllRead()" style="background:none;border:none;color:var(--brand);font-size:.8rem;cursor:pointer;font-weight:600">Mark all read</button>
+        </div>
+
+        <div id="notif-list" style="max-height:320px;overflow-y:auto">
+          <div class="notif-item unread" onclick="readNotif(this)">
+            <div class="notif-icon" style="background:var(--red-bg);color:var(--red)"><i class="fas fa-exclamation-circle"></i></div>
+            <div class="notif-content">
+              <div class="notif-title">High Risk Customer Detected</div>
+              <div class="notif-desc">Amit Patel has 78% churn probability</div>
+              <div class="notif-time"><i class="fas fa-clock"></i> 2 minutes ago</div>
+            </div>
+          </div>
+          <div class="notif-item unread" onclick="readNotif(this)">
+            <div class="notif-icon" style="background:var(--amber-bg);color:var(--amber)"><i class="fas fa-user-minus"></i></div>
+            <div class="notif-content">
+              <div class="notif-title">Customer Churned</div>
+              <div class="notif-desc">Rohit Gupta has cancelled subscription</div>
+              <div class="notif-time"><i class="fas fa-clock"></i> 15 minutes ago</div>
+            </div>
+          </div>
+          <div class="notif-item unread" onclick="readNotif(this)">
+            <div class="notif-icon" style="background:var(--green-bg);color:var(--green)"><i class="fas fa-bullhorn"></i></div>
+            <div class="notif-content">
+              <div class="notif-title">Campaign Completed</div>
+              <div class="notif-desc">Win Back Q2 campaign reached 1,200 customers</div>
+              <div class="notif-time"><i class="fas fa-clock"></i> 1 hour ago</div>
+            </div>
+          </div>
+          <div class="notif-item" onclick="readNotif(this)">
+            <div class="notif-icon" style="background:var(--blue-bg);color:var(--blue)"><i class="fas fa-user-plus"></i></div>
+            <div class="notif-content">
+              <div class="notif-title">New Customer Added</div>
+              <div class="notif-desc">Priya Verma registered successfully</div>
+              <div class="notif-time"><i class="fas fa-clock"></i> 3 hours ago</div>
+            </div>
+          </div>
+          <div class="notif-item" onclick="readNotif(this)">
+            <div class="notif-icon" style="background:var(--purple-bg);color:var(--purple)"><i class="fas fa-chart-line"></i></div>
+            <div class="notif-content">
+              <div class="notif-title">Monthly Report Ready</div>
+              <div class="notif-desc">April 2025 analytics report is available</div>
+              <div class="notif-time"><i class="fas fa-clock"></i> Yesterday</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="padding:.875rem 1.25rem;border-top:1px solid var(--border);text-align:center">
+          <a href="#" style="font-size:.85rem;color:var(--brand);font-weight:600">View all notifications</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Help Button -->
+    <button class="icon-btn" data-tooltip="Help" onclick="toggleHelp()">
+      <i class="fas fa-question-circle"></i>
+    </button>
+
+    <div class="user-chip">
+      <div class="user-avatar" id="nav-avatar">RS</div>
+      <div class="user-info">
+        <span class="user-name" id="nav-username">Rahul Sharma</span>
+        <span class="user-role" id="nav-role">Admin</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ── Help Modal ── -->
+<div id="help-modal" style="
+  display:none;position:fixed;inset:0;
+  background:rgba(15,23,42,.5);z-index:1000;
+  display:none;align-items:center;justify-content:center;
+  padding:1.5rem;backdrop-filter:blur(4px);
+" onclick="closeHelpOnBg(event)">
+  <div style="
+    background:var(--bg-card);border-radius:var(--r-xl);
+    box-shadow:var(--sh-lg);width:100%;max-width:580px;
+    max-height:85vh;overflow-y:auto;
+  ">
+    <div style="padding:1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg-card);z-index:1">
+      <div>
+        <h3 style="margin:0">Help & Support</h3>
+        <p style="margin:.25rem 0 0;font-size:.85rem;color:var(--txt-3)">ChurnPredict User Guide</p>
+      </div>
+      <button onclick="toggleHelp()" style="width:32px;height:32px;border-radius:50%;border:none;background:var(--bg-page);cursor:pointer;font-size:.9rem;color:var(--txt-2)">✕</button>
+    </div>
+
+    <div style="padding:1.5rem;display:flex;flex-direction:column;gap:1rem">
+
+      <!-- Quick links -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+        <a href="/dashboard" onclick="toggleHelp()" style="display:flex;align-items:center;gap:.75rem;padding:.875rem;background:var(--blue-bg);border-radius:var(--r-md);text-decoration:none">
+          <i class="fas fa-th-large" style="color:var(--blue);font-size:1.2rem"></i>
+          <div><div style="font-weight:700;font-size:.875rem;color:var(--blue-txt)">Dashboard</div><div style="font-size:.75rem;color:var(--txt-3)">View overview</div></div>
+        </a>
+        <a href="/predict" onclick="toggleHelp()" style="display:flex;align-items:center;gap:.75rem;padding:.875rem;background:var(--purple-bg);border-radius:var(--r-md);text-decoration:none">
+          <i class="fas fa-robot" style="color:var(--purple);font-size:1.2rem"></i>
+          <div><div style="font-weight:700;font-size:.875rem;color:var(--purple-txt)">Predict Churn</div><div style="font-size:.75rem;color:var(--txt-3)">Run AI prediction</div></div>
+        </a>
+        <a href="/customers" onclick="toggleHelp()" style="display:flex;align-items:center;gap:.75rem;padding:.875rem;background:var(--green-bg);border-radius:var(--r-md);text-decoration:none">
+          <i class="fas fa-users" style="color:var(--green);font-size:1.2rem"></i>
+          <div><div style="font-weight:700;font-size:.875rem;color:var(--green-txt)">Customers</div><div style="font-size:.75rem;color:var(--txt-3)">Manage records</div></div>
+        </a>
+        <a href="/reports" onclick="toggleHelp()" style="display:flex;align-items:center;gap:.75rem;padding:.875rem;background:var(--amber-bg);border-radius:var(--r-md);text-decoration:none">
+          <i class="fas fa-file-alt" style="color:var(--amber);font-size:1.2rem"></i>
+          <div><div style="font-weight:700;font-size:.875rem;color:var(--amber-txt)">Reports</div><div style="font-size:.75rem;color:var(--txt-3)">Download data</div></div>
+        </a>
+      </div>
+
+      <!-- FAQ -->
+      <div>
+        <div style="font-weight:700;font-size:.95rem;margin-bottom:.75rem">Frequently Asked Questions</div>
+
+        <div class="faq-item" onclick="toggleFaq(this)">
+          <div class="faq-q"><i class="fas fa-chevron-right faq-arrow"></i> How does churn prediction work?</div>
+          <div class="faq-a">Our AI model analyzes customer data like tenure, monthly charges, contract type and support calls to predict the probability of a customer leaving. A score above 70% means high risk.</div>
+        </div>
+        <div class="faq-item" onclick="toggleFaq(this)">
+          <div class="faq-q"><i class="fas fa-chevron-right faq-arrow"></i> How do I add a new customer?</div>
+          <div class="faq-a">Go to Customers → Add Customer. Fill in the required fields (name, email, phone, plan, monthly charges) and click Save Customer.</div>
+        </div>
+        <div class="faq-item" onclick="toggleFaq(this)">
+          <div class="faq-q"><i class="fas fa-chevron-right faq-arrow"></i> How do I send an SMS alert?</div>
+          <div class="faq-a">Go to SMS Alerts from the sidebar. Select the target customer segment, type your message and click Send SMS. You can also schedule it for later.</div>
+        </div>
+        <div class="faq-item" onclick="toggleFaq(this)">
+          <div class="faq-q"><i class="fas fa-chevron-right faq-arrow"></i> How do I create a campaign?</div>
+          <div class="faq-a">Go to Campaigns, fill in the campaign name, target segment, type (SMS/Email), message and dates, then click Create Campaign.</div>
+        </div>
+        <div class="faq-item" onclick="toggleFaq(this)">
+          <div class="faq-q"><i class="fas fa-chevron-right faq-arrow"></i> How do I download reports?</div>
+          <div class="faq-a">Go to Reports page and click the Download button next to the report you need. You can also generate a custom report with a specific date range.</div>
+        </div>
+        <div class="faq-item" onclick="toggleFaq(this)">
+          <div class="faq-q"><i class="fas fa-chevron-right faq-arrow"></i> How do I change the theme?</div>
+          <div class="faq-a">Go to Settings → Appearance and click the Light, Dark or System button to switch themes. Your preference is saved automatically.</div>
+        </div>
+      </div>
+
+      <!-- Contact -->
+      <div style="background:var(--grad-soft);border-radius:var(--r-md);padding:1rem;text-align:center">
+        <div style="font-weight:700;margin-bottom:.35rem">Still need help?</div>
+        <p style="font-size:.85rem;margin-bottom:.75rem">Contact our support team</p>
+        <a href="/feedback" onclick="toggleHelp()" class="btn btn-primary btn-sm"><i class="fas fa-envelope"></i> Send Feedback</a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<style>
+/* Notification items */
+.notif-item {
+  display:flex;align-items:flex-start;gap:.75rem;
+  padding:.875rem 1.25rem;cursor:pointer;
+  transition:background .2s;border-bottom:1px solid var(--border);
+}
+.notif-item:last-child { border-bottom:none }
+.notif-item:hover { background:var(--bg-page) }
+.notif-item.unread { background:#FAFBFF }
+.notif-icon {
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.875rem;flex-shrink:0;
+}
+.notif-title { font-weight:700;font-size:.85rem;color:var(--txt-1);margin-bottom:.2rem }
+.notif-desc  { font-size:.78rem;color:var(--txt-2);margin-bottom:.2rem }
+.notif-time  { font-size:.72rem;color:var(--txt-3) }
+
+/* FAQ */
+.faq-item {
+  border:1px solid var(--border);border-radius:var(--r-md);
+  margin-bottom:.5rem;overflow:hidden;cursor:pointer;
+}
+.faq-q {
+  padding:.875rem 1rem;font-weight:600;font-size:.875rem;
+  display:flex;align-items:center;gap:.5rem;
+  transition:background .2s;
+}
+.faq-q:hover { background:var(--bg-page) }
+.faq-arrow { transition:transform .2s;font-size:.7rem;color:var(--brand) }
+.faq-a {
+  display:none;padding:0 1rem .875rem 2.25rem;
+  font-size:.85rem;color:var(--txt-2);line-height:1.6;
+}
+.faq-item.open .faq-arrow { transform:rotate(90deg) }
+.faq-item.open .faq-a { display:block }
+</style>
+
+<script>
+/* ── Notification ── */
+let unreadCount = 3;
+updateBadge();
+
+function updateBadge() {
+  const dot = document.getElementById('notif-dot');
+  if (dot) dot.style.display = unreadCount > 0 ? 'block' : 'none';
+}
+
+function toggleNotif() {
+  const d = document.getElementById('notif-dropdown');
+  const h = document.getElementById('help-modal');
+  h.style.display = 'none';
+  d.style.display = d.style.display === 'block' ? 'none' : 'block';
+}
+
+function readNotif(el) {
+  if (el.classList.contains('unread')) {
+    el.classList.remove('unread');
+    el.style.background = '';
+    unreadCount = Math.max(0, unreadCount - 1);
+    updateBadge();
+  }
+}
+
+function markAllRead() {
+  document.querySelectorAll('.notif-item.unread').forEach(el => {
+    el.classList.remove('unread');
+    el.style.background = '';
+  });
+  unreadCount = 0;
+  updateBadge();
+}
+
+/* ── Help Modal ── */
+function toggleHelp() {
+  const m = document.getElementById('help-modal');
+  const d = document.getElementById('notif-dropdown');
+  d.style.display = 'none';
+  m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+}
+
+function closeHelpOnBg(e) {
+  if (e.target === document.getElementById('help-modal')) toggleHelp();
+}
+
+/* ── FAQ accordion ── */
+function toggleFaq(el) {
+  el.classList.toggle('open');
+}
+
+/* ── Close dropdowns on outside click ── */
+document.addEventListener('click', function(e) {
+  const notifBtn = document.getElementById('notif-btn');
+  const notifDD  = document.getElementById('notif-dropdown');
+  if (notifDD && !notifDD.contains(e.target) && !notifBtn.contains(e.target)) {
+    notifDD.style.display = 'none';
+  }
+});
+
+/* ── Responsive ── */
+if (window.innerWidth <= 768) {
+  const btn = document.getElementById('sidebar-toggle');
+  if (btn) btn.style.display = 'flex';
+}
+window.addEventListener('resize', () => {
+  const btn = document.getElementById('sidebar-toggle');
+  if (btn) btn.style.display = window.innerWidth <= 768 ? 'flex' : 'none';
+});
+</script>

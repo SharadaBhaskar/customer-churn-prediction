@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en" id="html-root">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Settings — ChurnPredict</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+/* ── Dark Theme ── */
+body.dark-mode {
+  --bg-page:    #0F0C29;
+  --bg-card:    #1A1740;
+  --bg-sidebar: #07050F;
+  --bg-nav:     #1A1740;
+  --txt-1:      #F1F5F9;
+  --txt-2:      #94A3B8;
+  --txt-3:      #64748B;
+  --border:     #2D2A50;
+}
+body.dark-mode .navbar,
+body.dark-mode .card,
+body.dark-mode .footer {
+  background: var(--bg-card);
+  border-color: var(--border);
+}
+body.dark-mode .form-control {
+  background: #0F0C29;
+  color: #F1F5F9;
+  border-color: var(--border);
+}
+body.dark-mode table thead th { background: #12103A; }
+body.dark-mode tbody tr:hover { background: #1E1B4B; }
+body.dark-mode .settings-item { border-color: var(--border); }
+
+/* ── Toast banner ── */
+#toast-banner {
+  display:none;
+  position:fixed;bottom:1.5rem;right:1.5rem;
+  background:var(--brand);color:#fff;
+  padding:.75rem 1.5rem;border-radius:var(--r-md);
+  font-size:.875rem;font-weight:600;
+  box-shadow:var(--sh-brand);z-index:9999;
+  animation:slideUp .3s ease both;
+}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  {% include 'layout/sidebar.html' %}
+  <div class="page-content">
+    {% include 'layout/navbar.html' %}
+    <div class="content-wrapper">
+
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="breadcrumb"><a href="/dashboard">Home</a><i class="fas fa-chevron-right"></i>Settings</div>
+          <h1 class="page-title">Settings</h1>
+          <p class="page-subtitle">Manage your account settings and preferences</p>
+        </div>
+      </div>
+
+      <div style="max-width:720px;display:flex;flex-direction:column;gap:1.5rem">
+
+        <!-- Security -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-shield-alt" style="color:var(--brand)"></i> Security</div>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-left">
+              <div class="settings-item-icon"><i class="fas fa-key"></i></div>
+              <div>
+                <div class="settings-item-title">Change Password</div>
+                <div class="settings-item-desc">Update your account password</div>
+              </div>
+            </div>
+            <a href="/profile" class="btn btn-secondary btn-sm">Change <i class="fas fa-chevron-right"></i></a>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-left">
+              <div class="settings-item-icon"><i class="fas fa-mobile-alt"></i></div>
+              <div>
+                <div class="settings-item-title">Two-Factor Authentication</div>
+                <div class="settings-item-desc">Add extra security to your account</div>
+              </div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="toggle-2fa">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-bell" style="color:var(--amber)"></i> Notifications</div>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-left">
+              <div class="settings-item-icon" style="color:var(--blue)"><i class="fas fa-envelope"></i></div>
+              <div>
+                <div class="settings-item-title">Email Notifications</div>
+                <div class="settings-item-desc">Receive reports and alerts via email</div>
+              </div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="toggle-email" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-left">
+              <div class="settings-item-icon" style="color:var(--green)"><i class="fas fa-sms"></i></div>
+              <div>
+                <div class="settings-item-title">SMS Notifications</div>
+                <div class="settings-item-desc">Receive critical alerts via SMS</div>
+              </div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="toggle-sms" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-left">
+              <div class="settings-item-icon" style="color:var(--red)"><i class="fas fa-exclamation-circle"></i></div>
+              <div>
+                <div class="settings-item-title">High Risk Alerts</div>
+                <div class="settings-item-desc">Notify when churn risk exceeds 70%</div>
+              </div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="toggle-risk" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Appearance -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-palette" style="color:var(--purple)"></i> Appearance</div>
+          </div>
+
+          <!-- Language -->
+          <div class="settings-item">
+            <div class="settings-item-left">
+              <div class="settings-item-icon"><i class="fas fa-globe"></i></div>
+              <div>
+                <div class="settings-item-title">Language</div>
+                <div class="settings-item-desc" id="lang-desc">Currently: English</div>
+              </div>
+            </div>
+            <select class="form-control" style="width:180px" id="lang-select" onchange="changeLanguage(this.value)">
+              <option value="en">🇬🇧 English</option>
+              <option value="hi">🇮🇳 Hindi</option>
+              <option value="gu">🇮🇳 Gujarati</option>
+              <option value="mr">🇮🇳 Marathi</option>
+              <option value="ta">🇮🇳 Tamil</option>
+              <option value="te">🇮🇳 Telugu</option>
+              <option value="kn">🇮🇳 Kannada</option>
+              <option value="bn">🇮🇳 Bengali</option>
+              <option value="pa">🇮🇳 Punjabi</option>
+              <option value="ur">🇵🇰 Urdu</option>
+              <option value="fr">🇫🇷 French</option>
+              <option value="de">🇩🇪 German</option>
+              <option value="es">🇪🇸 Spanish</option>
+              <option value="pt">🇧🇷 Portuguese</option>
+              <option value="ar">🇸🇦 Arabic</option>
+              <option value="zh">🇨🇳 Chinese</option>
+              <option value="ja">🇯🇵 Japanese</option>
+              <option value="ko">🇰🇷 Korean</option>
+              <option value="ru">🇷🇺 Russian</option>
+            </select>
+          </div>
+
+          <!-- Theme -->
+          <div class="settings-item">
+            <div class="settings-item-left">
+              <div class="settings-item-icon"><i class="fas fa-adjust"></i></div>
+              <div>
+                <div class="settings-item-title">Theme</div>
+                <div class="settings-item-desc" id="theme-desc">Currently using Light mode</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:.5rem">
+              <button class="btn btn-primary btn-sm" id="btn-light" onclick="setTheme('light')">
+                <i class="fas fa-sun"></i> Light
+              </button>
+              <button class="btn btn-secondary btn-sm" id="btn-dark" onclick="setTheme('dark')">
+                <i class="fas fa-moon"></i> Dark
+              </button>
+              <button class="btn btn-secondary btn-sm" id="btn-system" onclick="setTheme('system')">
+                <i class="fas fa-desktop"></i> System
+              </button>
+            </div>
+          </div>
+
+          <!-- Font Size -->
+          <div class="settings-item">
+            <div class="settings-item-left">
+              <div class="settings-item-icon"><i class="fas fa-text-height"></i></div>
+              <div>
+                <div class="settings-item-title">Font Size</div>
+                <div class="settings-item-desc">Adjust text size across the app</div>
+              </div>
+            </div>
+            <select class="form-control" style="width:180px" id="font-select" onchange="changeFontSize(this.value)">
+              <option value="13">Small</option>
+              <option value="15">Medium</option>
+              <option value="16" selected>Default</option>
+              <option value="18">Large</option>
+              <option value="20">Extra Large</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="card" style="border-color:var(--red)">
+          <div class="card-header" style="background:var(--red-bg)">
+            <div class="card-title" style="color:var(--red-txt)">
+              <i class="fas fa-exclamation-triangle"></i> Danger Zone
+            </div>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-left">
+              <div class="settings-item-icon" style="background:var(--red-bg);color:var(--red)"><i class="fas fa-trash-alt"></i></div>
+              <div>
+                <div class="settings-item-title">Delete Account</div>
+                <div class="settings-item-desc">Permanently delete your account and all data</div>
+              </div>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="confirmDelete()">Delete Account</button>
+          </div>
+        </div>
+
+        <button class="btn btn-grad btn-lg" onclick="saveAllSettings()">
+          <i class="fas fa-save"></i> Save All Settings
+        </button>
+
+      </div>
+    </div>
+    {% include 'layout/footer.html' %}
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div id="toast-banner"></div>
+
+<script>
+/* ─────────────── THEME ─────────────── */
+function setTheme(theme) {
+  const body = document.body;
+
+  if (theme === 'dark') {
+    body.classList.add('dark-mode');
+    document.getElementById('theme-desc').textContent = 'Currently using Dark mode';
+  } else if (theme === 'light') {
+    body.classList.remove('dark-mode');
+    document.getElementById('theme-desc').textContent = 'Currently using Light mode';
+  } else {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    prefersDark ? body.classList.add('dark-mode') : body.classList.remove('dark-mode');
+    document.getElementById('theme-desc').textContent = 'Following system preference';
+  }
+
+  // Update button active states
+  ['light','dark','system'].forEach(t => {
+    const btn = document.getElementById('btn-' + t);
+    btn.className = (t === theme) ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm';
+  });
+
+  localStorage.setItem('theme', theme);
+  showToast('🎨 Theme changed to ' + theme.charAt(0).toUpperCase() + theme.slice(1));
+}
+
+/* ─────────────── LANGUAGE ─────────────── */
+const langNames = {
+  en:'English', hi:'Hindi (हिन्दी)', gu:'Gujarati (ગુજરાતી)',
+  mr:'Marathi (मराठी)', ta:'Tamil (தமிழ்)', te:'Telugu (తెలుగు)',
+  kn:'Kannada (ಕನ್ನಡ)', bn:'Bengali (বাংলা)', pa:'Punjabi (ਪੰਜਾਬੀ)',
+  ur:'Urdu (اردو)', fr:'French', de:'German', es:'Spanish',
+  pt:'Portuguese', ar:'Arabic', zh:'Chinese', ja:'Japanese',
+  ko:'Korean', ru:'Russian'
+};
+
+function changeLanguage(lang) {
+  localStorage.setItem('language', lang);
+  document.getElementById('html-root').setAttribute('lang', lang);
+  document.getElementById('lang-desc').textContent = 'Currently: ' + langNames[lang];
+  showToast('🌐 Language changed to ' + langNames[lang]);
+}
+
+/* ─────────────── FONT SIZE ─────────────── */
+function changeFontSize(size) {
+  document.documentElement.style.fontSize = size + 'px';
+  localStorage.setItem('fontSize', size);
+  showToast('🔤 Font size updated');
+}
+
+/* ─────────────── TOAST ─────────────── */
+function showToast(msg) {
+  const t = document.getElementById('toast-banner');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => t.style.display = 'none', 3000);
+}
+
+/* ─────────────── SAVE ALL ─────────────── */
+function saveAllSettings() {
+  const settings = {
+    theme:      localStorage.getItem('theme') || 'light',
+    language:   localStorage.getItem('language') || 'en',
+    fontSize:   localStorage.getItem('fontSize') || '16',
+    twoFA:      document.getElementById('toggle-2fa').checked,
+    emailNotif: document.getElementById('toggle-email').checked,
+    smsNotif:   document.getElementById('toggle-sms').checked,
+    riskAlerts: document.getElementById('toggle-risk').checked,
+  };
+  localStorage.setItem('settings', JSON.stringify(settings));
+  showToast('✅ All settings saved successfully!');
+}
+
+/* ─────────────── DELETE ─────────────── */
+function confirmDelete() {
+  if (confirm('Are you sure? This will permanently delete your account and cannot be undone.')) {
+    showToast('🗑️ Account deletion requested.');
+  }
+}
+
+/* ─────────────── RESTORE ON LOAD ─────────────── */
+window.addEventListener('DOMContentLoaded', () => {
+  // Restore theme
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  setTheme(savedTheme);
+
+  // Restore language
+  const savedLang = localStorage.getItem('language') || 'en';
+  document.getElementById('lang-select').value = savedLang;
+  document.getElementById('lang-desc').textContent = 'Currently: ' + langNames[savedLang];
+
+  // Restore font size
+  const savedFont = localStorage.getItem('fontSize') || '16';
+  document.getElementById('font-select').value = savedFont;
+  document.documentElement.style.fontSize = savedFont + 'px';
+
+  // Restore toggles
+  const saved = JSON.parse(localStorage.getItem('settings') || '{}');
+  if (saved.twoFA      !== undefined) document.getElementById('toggle-2fa').checked    = saved.twoFA;
+  if (saved.emailNotif !== undefined) document.getElementById('toggle-email').checked  = saved.emailNotif;
+  if (saved.smsNotif   !== undefined) document.getElementById('toggle-sms').checked    = saved.smsNotif;
+  if (saved.riskAlerts !== undefined) document.getElementById('toggle-risk').checked   = saved.riskAlerts;
+});
+
+const pt = document.getElementById('page-title');
+if (pt) pt.textContent = 'Settings';
+</script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<title>Churn AI</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Inter;
+}
+
+body{
+    background:#f4f6fb;
+    display:flex;
+    color:#111827;
+}
+
+/* SIDEBAR */
+.sidebar{
+    width:240px;
+    height:100vh;
+    position:fixed;
+    background:#ffffff;
+    border-right:1px solid #e5e7eb;
+    padding:20px;
+}
+
+.logo{
+    font-size:20px;
+    font-weight:700;
+    margin-bottom:25px;
+    color:#2563eb;
+}
+
+.nav a{
+    display:block;
+    padding:10px 12px;
+    margin:6px 0;
+    text-decoration:none;
+    border-radius:10px;
+    color:#4b5563;
+    transition:0.2s;
+    font-weight:500;
+}
+
+.nav a:hover{
+    background:#eff6ff;
+    color:#2563eb;
+    transform:translateX(5px);
+}
+
+/* MAIN AREA */
+.main{
+    margin-left:240px;
+    padding:30px;
+    width:100%;
+}
+
+/* PAGE HEADER */
+.page-header{
+    background:#ffffff;
+    border:1px solid #e5e7eb;
+    padding:18px;
+    border-radius:14px;
+    margin-bottom:20px;
+}
+
+/* SECTION TITLE */
+.section-title{
+    font-size:14px;
+    color:#6b7280;
+    margin-bottom:10px;
+}
+
+/* GRID */
+.grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:15px;
+}
+
+/* CARD */
+.card{
+    background:#ffffff;
+    border:1px solid #e5e7eb;
+    border-radius:14px;
+    padding:18px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.03);
+    transition:0.2s;
+}
+
+.card:hover{
+    transform:translateY(-5px);
+    box-shadow:0 10px 25px rgba(0,0,0,0.08);
+}
+
+/* BUTTON */
+button{
+    padding:9px 14px;
+    border:none;
+    border-radius:10px;
+    background:#2563eb;
+    color:white;
+    cursor:pointer;
+    font-weight:600;
+    transition:0.2s;
+}
+
+button:hover{
+    background:#1d4ed8;
+    transform:scale(1.03);
+}
+
+/* TEXT */
+h1{ font-size:22px; }
+h2{ font-size:20px; margin-top:6px; }
+p{ color:#6b7280; }
+
+</style>
+
+</head>
+
+<body>
+
+<div class="sidebar">
+    <div class="logo">📊 Churn AI</div>
+
+    <div class="nav">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/prediction">Prediction</a>
+        <a href="/customers">Customers</a>
+        <a href="/analytics">Analytics</a>
+        <a href="/settings">Settings</a>
+    </div>
+</div>
+
+<div class="main">
+    {% block content %}{% endblock %}
+</div>
+
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Analytics — ChurnPredict</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="app-shell">
+  {% include 'layout/sidebar.html' %}
+  <div class="page-content">
+    {% include 'layout/navbar.html' %}
+    <div class="content-wrapper">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="breadcrumb"><a href="/dashboard">Home</a><i class="fas fa-chevron-right"></i>Analytics</div>
+          <h1 class="page-title">Analytics</h1>
+          <p class="page-subtitle">Insights and data intelligence</p>
+        </div>
+        <div class="page-header-actions">
+          <select class="form-control" style="width:160px">
+            <option>Last 12 Months</option>
+            <option>Last 6 Months</option>
+            <option>Last 30 Days</option>
+          </select>
+          <button class="btn btn-primary"><i class="fas fa-download"></i> Export</button>
+        </div>
+      </div>
+
+      <!-- KPI Row -->
+      <div class="grid-4 mb-4">
+        <div class="stat-card">
+          <div class="stat-icon red"><i class="fas fa-chart-line"></i></div>
+          <div class="stat-info">
+            <div class="stat-label">Churn Rate</div>
+            <div class="stat-value">{{ churn_rate|default('19.6') }}%</div>
+            <div class="stat-change down"><i class="fas fa-arrow-down"></i> 1.2% vs last month</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green"><i class="fas fa-clock"></i></div>
+          <div class="stat-info">
+            <div class="stat-label">Avg Tenure</div>
+            <div class="stat-value">{{ avg_tenure|default('24.5') }} mo</div>
+            <div class="stat-change up"><i class="fas fa-arrow-up"></i> 0.8 mo increase</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon blue"><i class="fas fa-rupee-sign"></i></div>
+          <div class="stat-info">
+            <div class="stat-label">Monthly Charges</div>
+            <div class="stat-value">₹{{ monthly_charges|default('1,245') }}</div>
+            <div class="stat-change up"><i class="fas fa-arrow-up"></i> 3.4% increase</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon amber"><i class="fas fa-wallet"></i></div>
+          <div class="stat-info">
+            <div class="stat-label">Total Revenue</div>
+            <div class="stat-value">₹{{ revenue|default('29.4L') }}</div>
+            <div class="stat-change up"><i class="fas fa-arrow-up"></i> 7.2% this year</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="grid-2 mb-4">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Churn Rate Over Time</div></div>
+          <div class="card-body"><canvas id="churnLine" height="200"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Revenue Over Time</div></div>
+          <div class="card-body"><canvas id="revBar" height="200"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Plan Distribution + Contract Mix -->
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Plan Distribution</div></div>
+          <div class="card-body" style="display:flex;justify-content:center"><canvas id="planPie" width="240" height="240"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Contract Type Mix</div></div>
+          <div class="card-body" style="display:flex;justify-content:center"><canvas id="contractPie" width="240" height="240"></canvas></div>
+        </div>
+      </div>
+    </div>
+    {% include 'layout/footer.html' %}
+  </div>
+</div>
+<script>
+const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+new Chart(document.getElementById('churnLine').getContext('2d'),{
+  type:'line',
+  data:{labels:months,datasets:[{label:'Churn %',data:[22,21,23,20,21,19,20,18,19,17,18,16],borderColor:'#EF4444',backgroundColor:'rgba(239,68,68,.07)',borderWidth:2.5,pointRadius:4,tension:.4,fill:true}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false,grid:{color:'#F1F5F9'}},x:{grid:{display:false}}}}
+});
+
+new Chart(document.getElementById('revBar').getContext('2d'),{
+  type:'bar',
+  data:{labels:months,datasets:[{label:'Revenue (₹L)',data:[22,24,23,25,26,28,27,29,30,28,31,32],backgroundColor:'rgba(79,70,229,.8)',borderRadius:5}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#F1F5F9'}},x:{grid:{display:false}}}}
+});
+
+new Chart(document.getElementById('planPie').getContext('2d'),{
+  type:'doughnut',
+  data:{labels:['Basic','Standard','Premium'],datasets:[{data:[35,40,25],backgroundColor:['#06B6D4','#4F46E5','#F59E0B'],borderWidth:3,borderColor:'#fff'}]},
+  options:{responsive:false,plugins:{legend:{position:'bottom'}}}
+});
+
+new Chart(document.getElementById('contractPie').getContext('2d'),{
+  type:'doughnut',
+  data:{labels:['Month-to-month','One Year','Two Year'],datasets:[{data:[55,25,20],backgroundColor:['#EF4444','#10B981','#8B5CF6'],borderWidth:3,borderColor:'#fff'}]},
+  options:{responsive:false,plugins:{legend:{position:'bottom'}}}
+});
+
+document.getElementById('page-title').textContent='Analytics';
+</script>
+</body>
+</html>

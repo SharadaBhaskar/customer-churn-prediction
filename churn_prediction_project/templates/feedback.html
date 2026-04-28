@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Feedback — ChurnPredict</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+<div class="app-shell">
+  {% include 'layout/sidebar.html' %}
+  <div class="page-content">
+    {% include 'layout/navbar.html' %}
+    <div class="content-wrapper">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="breadcrumb"><a href="/dashboard">Home</a><i class="fas fa-chevron-right"></i>Feedback</div>
+          <h1 class="page-title">Feedback</h1>
+          <p class="page-subtitle">We value your experience and feedback</p>
+        </div>
+      </div>
+
+      <div style="max-width:640px">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-star" style="color:var(--amber)"></i> Share Your Feedback</div>
+          </div>
+          <div class="card-body">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% for cat,msg in messages %}
+                <div class="alert alert-{{ 'success' if cat=='success' else 'danger' }}"><i class="fas fa-{{ 'check-circle' if cat=='success' else 'times-circle' }}"></i> {{ msg }}</div>
+              {% endfor %}
+            {% endwith %}
+
+            <form method="POST" action="/feedback">
+              <div class="form-group">
+                <label class="form-label">Your Rating <span class="req">*</span></label>
+                <div class="stars" id="star-container">
+                  {% for i in range(1,6) %}
+                  <span class="star {{ 'filled' if i <= 4 }}" data-val="{{ i }}" onclick="setRating({{ i }})">★</span>
+                  {% endfor %}
+                </div>
+                <input type="hidden" name="rating" id="rating-input" value="4">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Category</label>
+                <select name="category" class="form-control">
+                  <option value="general">General Experience</option>
+                  <option value="prediction">Prediction Accuracy</option>
+                  <option value="ui">User Interface</option>
+                  <option value="performance">Performance</option>
+                  <option value="feature">Feature Request</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Your Feedback <span class="req">*</span></label>
+                <textarea name="feedback_text" class="form-control" rows="5" placeholder="Share your experience with ChurnPredict…" required></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Name (Optional)</label>
+                <input type="text" name="name" class="form-control" placeholder="Your name" value="{{ current_user.name | default('') }}">
+              </div>
+
+              <button type="submit" class="btn btn-grad btn-lg w-full">
+                <i class="fas fa-paper-plane"></i> Submit Feedback
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% include 'layout/footer.html' %}
+  </div>
+</div>
+<script>
+function setRating(val){
+  document.getElementById('rating-input').value=val;
+  document.querySelectorAll('.star').forEach((s,i)=>{
+    s.classList.toggle('filled', i<val);
+  });
+}
+document.getElementById('page-title').textContent='Feedback';
+</script>
+</body>
+</html>

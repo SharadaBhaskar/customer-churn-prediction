@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Reports — ChurnPredict</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+<div class="app-shell">
+  {% include 'layout/sidebar.html' %}
+  <div class="page-content">
+    {% include 'layout/navbar.html' %}
+    <div class="content-wrapper">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="breadcrumb"><a href="/dashboard">Home</a><i class="fas fa-chevron-right"></i>Reports</div>
+          <h1 class="page-title">Reports</h1>
+          <p class="page-subtitle">Generate and download business reports</p>
+        </div>
+      </div>
+
+      <!-- Report Categories -->
+      <div class="grid-2 mb-4">
+        {% for r in [
+          {'title':'Churn Report','desc':'Detailed churn analysis report with trends and predictions','icon':'fas fa-chart-line','color':'red','route':'/reports/churn'},
+          {'title':'Customers Report','desc':'Complete customers data report with all details','icon':'fas fa-users','color':'blue','route':'/reports/customers'},
+          {'title':'Revenue Report','desc':'Revenue and earnings performance report','icon':'fas fa-rupee-sign','color':'green','route':'/reports/revenue'},
+          {'title':'Campaign Report','desc':'Campaign performance and conversion analysis','icon':'fas fa-bullhorn','color':'amber','route':'/reports/campaigns'},
+          {'title':'Retention Report','desc':'Retention strategy effectiveness analysis','icon':'fas fa-shield-alt','color':'purple','route':'/reports/retention'},
+          {'title':'Analytics Report','desc':'Full analytics summary with all KPIs','icon':'fas fa-chart-bar','color':'brand','route':'/reports/analytics'}
+        ] %}
+        <div class="report-item card" style="border-radius:var(--r-lg)">
+          <div style="display:flex;align-items:center;gap:1rem;padding:1.25rem 1.5rem">
+            <div class="report-icon" style="background:var(--{{ r.color if r.color != 'brand' else 'blue' }}-bg);color:var(--{{ r.color if r.color != 'brand' else 'blue' }})">
+              <i class="{{ r.icon }}"></i>
+            </div>
+            <div style="flex:1">
+              <div style="font-weight:700;font-size:.95rem;margin-bottom:.2rem">{{ r.title }}</div>
+              <div style="font-size:.8rem;color:var(--txt-3)">{{ r.desc }}</div>
+            </div>
+            <a href="{{ r.route }}" class="btn btn-primary btn-sm">
+              <i class="fas fa-download"></i> Download
+            </a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Custom Report Generator -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-sliders-h" style="color:var(--brand)"></i> Custom Report</div>
+          <div class="card-subtitle">Generate a report with custom date range and filters</div>
+        </div>
+        <div class="card-body">
+          <form method="POST" action="/reports/custom">
+            <div class="form-row-3">
+              <div class="form-group">
+                <label class="form-label">Report Type</label>
+                <select name="report_type" class="form-control">
+                  <option value="churn">Churn Analysis</option>
+                  <option value="customers">Customers</option>
+                  <option value="revenue">Revenue</option>
+                  <option value="all">All Data</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">From Date</label>
+                <input type="date" name="from_date" class="form-control">
+              </div>
+              <div class="form-group">
+                <label class="form-label">To Date</label>
+                <input type="date" name="to_date" class="form-control">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Format</label>
+                <select name="format" class="form-control">
+                  <option value="pdf">PDF</option>
+                  <option value="excel">Excel</option>
+                  <option value="csv">CSV</option>
+                </select>
+              </div>
+              <div class="form-group" style="display:flex;align-items:flex-end">
+                <button type="submit" class="btn btn-primary btn-lg w-full"><i class="fas fa-file-export"></i> Generate Report</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% include 'layout/footer.html' %}
+  </div>
+</div>
+<script>document.getElementById('page-title').textContent='Reports';</script>
+</body>
+</html>

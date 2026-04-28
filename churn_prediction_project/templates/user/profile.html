@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Profile — ChurnPredict</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+<div class="app-shell">
+  {% include 'layout/sidebar.html' %}
+  <div class="page-content">
+    {% include 'layout/navbar.html' %}
+    <div class="content-wrapper">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="breadcrumb"><a href="/dashboard">Home</a><i class="fas fa-chevron-right"></i>Profile</div>
+          <h1 class="page-title">User Profile</h1>
+          <p class="page-subtitle">Manage your profile information</p>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 2fr;gap:1.5rem;align-items:start">
+        <!-- Profile Card -->
+        <div class="card">
+          <div class="card-body" style="text-align:center">
+            <div class="profile-avatar-lg" id="avatar-display">{{ current_user.name[:2].upper() if current_user else 'RS' }}</div>
+            <div class="profile-name">{{ current_user.name if current_user else 'Rahul Sharma' }}</div>
+            <div class="profile-role">{{ current_user.role if current_user else 'Admin' }}</div>
+            <hr class="divider">
+            <div style="display:flex;flex-direction:column;gap:.75rem;text-align:left">
+              <div style="display:flex;align-items:center;gap:.6rem;font-size:.875rem">
+                <i class="fas fa-envelope" style="color:var(--txt-3);width:16px"></i>
+                <span>{{ current_user.email if current_user else 'rahul@mail.com' }}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:.6rem;font-size:.875rem">
+                <i class="fas fa-phone" style="color:var(--txt-3);width:16px"></i>
+                <span>{{ current_user.phone if current_user else '9876543210' }}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:.6rem;font-size:.875rem">
+                <i class="fas fa-shield-alt" style="color:var(--txt-3);width:16px"></i>
+                <span class="badge badge-purple">{{ current_user.role if current_user else 'Admin' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Edit Form -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-user-edit" style="color:var(--brand)"></i> Edit Profile</div>
+          </div>
+          <div class="card-body">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% for cat,msg in messages %}
+                <div class="alert alert-{{ 'success' if cat=='success' else 'danger' }}">
+                  <i class="fas fa-{{ 'check-circle' if cat=='success' else 'times-circle' }}"></i> {{ msg }}
+                </div>
+              {% endfor %}
+            {% endwith %}
+
+            <!-- FIX: removed </form> from opening tag -->
+            <form method="POST" action="/profile">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Full Name <span class="req">*</span></label>
+                  <input type="text" name="full_name" class="form-control" value="{{ current_user.name if current_user else 'Rahul Sharma' }}" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Email <span class="req">*</span></label>
+                  <input type="email" name="email" class="form-control" value="{{ current_user.email if current_user else 'rahul@mail.com' }}" required>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Phone</label>
+                  <input type="tel" name="phone" class="form-control" value="{{ current_user.phone if current_user else '9876543210' }}">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Role</label>
+                  <select name="role" class="form-control">
+                    <option value="Admin" selected>Admin</option>
+                    <option value="Manager">Manager</option>
+                    <option value="Analyst">Analyst</option>
+                  </select>
+                </div>
+              </div>
+              <hr class="divider">
+              <h4 style="margin-bottom:1rem">Change Password</h4>
+              <div class="form-row-3">
+                <div class="form-group">
+                  <label class="form-label">Current Password</label>
+                  <input type="password" name="current_password" class="form-control" placeholder="••••••••">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">New Password</label>
+                  <input type="password" name="new_password" class="form-control" placeholder="••••••••" minlength="8">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Confirm New</label>
+                  <input type="password" name="confirm_password" class="form-control" placeholder="••••••••">
+                </div>
+              </div>
+              <button type="submit" class="btn btn-grad btn-lg">
+                <i class="fas fa-save"></i> Update Profile
+              </button>
+            </form>
+
+          </div>
+        </div>
+      </div>
+    </div>
+    {% include 'layout/footer.html' %}
+  </div>
+</div>
+<script>
+  const t = document.getElementById('page-title');
+  if(t) t.textContent = 'Profile';
+</script>
+</body>
+</html>

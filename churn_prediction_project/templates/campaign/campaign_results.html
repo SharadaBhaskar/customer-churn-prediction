@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Campaign Results — ChurnPredict</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="app-shell">
+  {% include 'layout/sidebar.html' %}
+  <div class="page-content">
+    {% include 'layout/navbar.html' %}
+    <div class="content-wrapper">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="breadcrumb"><a href="/dashboard">Home</a><i class="fas fa-chevron-right"></i><a href="/campaigns">Campaigns</a><i class="fas fa-chevron-right"></i>Results</div>
+          <h1 class="page-title">Campaign Results</h1>
+          <p class="page-subtitle">View campaign performance metrics</p>
+        </div>
+      </div>
+
+      <!-- Campaign KPIs -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem">
+        <div class="card" style="text-align:center">
+          <div class="card-body">
+            <div class="campaign-stat-val" style="color:var(--brand)">{{ sent|default('1,200') }}</div>
+            <div class="campaign-stat-lbl">Sent</div>
+          </div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div class="card-body">
+            <div class="campaign-stat-val" style="color:var(--blue)">{{ delivered|default('1,150') }}</div>
+            <div class="campaign-stat-lbl">Delivered</div>
+          </div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div class="card-body">
+            <div class="campaign-stat-val" style="color:var(--green)">{{ responses|default('320') }}</div>
+            <div class="campaign-stat-lbl">Responses</div>
+          </div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div class="card-body">
+            <div class="campaign-stat-val" style="color:var(--amber)">{{ conversion_rate|default('26.1') }}%</div>
+            <div class="campaign-stat-lbl">Conversion</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Performance Breakdown</div></div>
+          <div class="card-body"><canvas id="barChart" height="200"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Campaign List</div></div>
+          <div class="table-container" style="border:none;box-shadow:none;border-radius:0">
+            <table>
+              <thead><tr><th>Campaign</th><th>Sent</th><th>Conv.%</th><th>Status</th></tr></thead>
+              <tbody>
+                {% for c in campaign_list | default([
+                  {'name':'Win Back Q2','sent':580,'conv':28,'status':'Active'},
+                  {'name':'Loyalty Drive','sent':820,'conv':32,'status':'Completed'},
+                  {'name':'Summer Promo','sent':1200,'conv':26,'status':'Active'},
+                  {'name':'New User','sent':470,'conv':18,'status':'Paused'}
+                ]) %}
+                <tr>
+                  <td style="font-weight:600;font-size:.875rem">{{ c.name }}</td>
+                  <td>{{ c.sent }}</td>
+                  <td><strong style="color:var(--green)">{{ c.conv }}%</strong></td>
+                  <td><span class="badge {{ 'badge-green' if c.status=='Active' else ('badge-blue' if c.status=='Completed' else 'badge-amber') }}">{{ c.status }}</span></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% include 'layout/footer.html' %}
+  </div>
+</div>
+<script>
+new Chart(document.getElementById('barChart').getContext('2d'),{
+  type:'bar',
+  data:{
+    labels:['Sent','Delivered','Responded','Converted'],
+    datasets:[{
+      data:[1200,1150,320,210],
+      backgroundColor:['#4F46E5','#06B6D4','#10B981','#F59E0B'],
+      borderRadius:6
+    }]
+  },
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#F1F5F9'}},x:{grid:{display:false}}}}
+});
+document.getElementById('page-title').textContent='Campaign Results';
+</script>
+</body>
+</html>

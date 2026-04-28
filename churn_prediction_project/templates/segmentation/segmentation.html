@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Customer Segmentation — ChurnPredict</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="app-shell">
+  {% include 'layout/sidebar.html' %}
+  <div class="page-content">
+    {% include 'layout/navbar.html' %}
+    <div class="content-wrapper">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="breadcrumb"><a href="/dashboard">Home</a><i class="fas fa-chevron-right"></i>Segmentation</div>
+          <h1 class="page-title">Customer Segmentation</h1>
+          <p class="page-subtitle">View and analyze customer segments</p>
+        </div>
+      </div>
+
+      <!-- Segment Stats -->
+      <div class="segment-grid mb-4">
+        <div class="segment-pill">
+          <div class="segment-pill-value" style="color:var(--brand)">35%</div>
+          <div class="segment-pill-label">High Value</div>
+          <div class="segment-pill-count">820 customers</div>
+        </div>
+        <div class="segment-pill">
+          <div class="segment-pill-value" style="color:var(--red)">25%</div>
+          <div class="segment-pill-label">At Risk</div>
+          <div class="segment-pill-count">590 customers</div>
+        </div>
+        <div class="segment-pill">
+          <div class="segment-pill-value" style="color:var(--amber)">20%</div>
+          <div class="segment-pill-label">Low Value</div>
+          <div class="segment-pill-count">470 customers</div>
+        </div>
+        <div class="segment-pill">
+          <div class="segment-pill-value" style="color:var(--green)">20%</div>
+          <div class="segment-pill-label">New Customers</div>
+          <div class="segment-pill-count">470 customers</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Segment Distribution</div></div>
+          <div class="card-body" style="display:flex;justify-content:center">
+            <canvas id="pieChart" width="280" height="280"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Segment Details</div></div>
+          <div class="table-container" style="border:none;box-shadow:none;border-radius:0">
+            <table>
+              <thead><tr><th>Segment</th><th>Count</th><th>Avg Charges</th><th>Churn Risk</th></tr></thead>
+              <tbody>
+                <tr><td><span class="badge badge-purple">High Value</span></td><td>820</td><td>₹2,450</td><td><span class="badge badge-green">Low</span></td></tr>
+                <tr><td><span class="badge badge-red">At Risk</span></td><td>590</td><td>₹1,180</td><td><span class="badge badge-red">High</span></td></tr>
+                <tr><td><span class="badge badge-amber">Low Value</span></td><td>470</td><td>₹680</td><td><span class="badge badge-amber">Medium</span></td></tr>
+                <tr><td><span class="badge badge-green">New</span></td><td>470</td><td>₹950</td><td><span class="badge badge-amber">Medium</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% include 'layout/footer.html' %}
+  </div>
+</div>
+<script>
+new Chart(document.getElementById('pieChart').getContext('2d'),{
+  type:'doughnut',
+  data:{
+    labels:['High Value','At Risk','Low Value','New Customers'],
+    datasets:[{data:[35,25,20,20],backgroundColor:['#4F46E5','#EF4444','#F59E0B','#10B981'],borderWidth:3,borderColor:'#fff',hoverOffset:6}]
+  },
+  options:{responsive:false,plugins:{legend:{position:'bottom',labels:{padding:16,font:{size:12}}}}}
+});
+document.getElementById('page-title').textContent='Segmentation';
+</script>
+</body>
+</html>

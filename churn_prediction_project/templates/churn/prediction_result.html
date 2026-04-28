@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Prediction Result — ChurnPredict</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="app-shell">
+  {% include 'layout/sidebar.html' %}
+  <div class="page-content">
+    {% include 'layout/navbar.html' %}
+    <div class="content-wrapper">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="breadcrumb"><a href="/dashboard">Home</a><i class="fas fa-chevron-right"></i><a href="/predict">Prediction</a><i class="fas fa-chevron-right"></i>Result</div>
+          <h1 class="page-title">Prediction Result</h1>
+          <p class="page-subtitle">Here is the churn prediction for this customer</p>
+        </div>
+        <div class="page-header-actions">
+          <a href="/predict" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back to Prediction</a>
+          <button class="btn btn-primary" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:1.5rem;align-items:start">
+        <!-- Result Card -->
+        <div>
+          <div class="card mb-3" style="text-align:center;overflow:hidden">
+            <div style="padding:1.5rem 1.5rem .5rem">
+              <div class="card-title" style="margin-bottom:1rem">Churn Probability</div>
+              <!-- Gauge Wrapper -->
+              <div style="position:relative;display:inline-block;margin:0 auto">
+                <canvas id="gaugeChart" width="200" height="200"></canvas>
+                <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-40%);text-align:center">
+                  <div class="risk-value risk-{{ 'high' if churn_probability|default(78) > 70 else ('medium' if churn_probability|default(78) > 40 else 'low') }}">
+                    {{ churn_probability | default(78) }}%
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin:.75rem 0">
+                <span class="risk-label {{ 'high' if churn_probability|default(78) > 70 else ('medium' if churn_probability|default(78) > 40 else 'low') }}">
+                  {% if churn_probability|default(78) > 70 %}
+                    <i class="fas fa-exclamation-circle"></i> HIGH RISK
+                  {% elif churn_probability|default(78) > 40 %}
+                    <i class="fas fa-exclamation-triangle"></i> MEDIUM RISK
+                  {% else %}
+                    <i class="fas fa-check-circle"></i> LOW RISK
+                  {% endif %}
+                </span>
+              </div>
+            </div>
+
+            <div style="background:{% if churn_probability|default(78) > 70 %}var(--red-bg){% elif churn_probability|default(78) > 40 %}var(--amber-bg){% else %}var(--green-bg){% endif %};padding:1.25rem 1.5rem;border-top:1px solid var(--border)">
+              <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem;color:var(--txt-3)">Suggested Action</div>
+              <p style="font-size:.875rem;color:var(--txt-1);line-height:1.5">
+                {% if suggestion is defined %}
+                  {{ suggestion }}
+                {% elif churn_probability|default(78) > 70 %}
+                  Offer a discount on next bill and provide personalized support immediately.
+                {% elif churn_probability|default(78) > 40 %}
+                  Enroll customer in loyalty program and schedule a follow-up call.
+                {% else %}
+                  Customer is stable. Continue regular engagement and rewards.
+                {% endif %}
+              </p>
+            </div>
+          </div>
+
+          <!-- Input Summary -->
+          <div class="card">
+            <div class="card-header"><div class="card-title">Input Summary</div></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:.5rem">
+              {% set inputs = [
+                ('Tenure','tenure','12 months'),
+                ('Monthly Charges','monthly_charges','₹1,299'),
+                ('Contract','contract_type','Month-to-month'),
+                ('Support Calls','support_calls','3'),
+                ('Payment','payment_method','UPI')
+              ] %}
+              {% for label, key, default_val in inputs %}
+              <div style="display:flex;justify-content:space-between;font-size:.875rem;padding:.35rem 0;border-bottom:1px solid var(--border)">
+                <span class="text-muted">{{ label }}</span>
+                <strong>{{ prediction_input[key] | default(default_val) if prediction_input is defined else default_val }}</strong>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Detailed Analysis -->
+        <div style="display:flex;flex-direction:column;gap:1rem">
+          <!-- Feature Importance -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Feature Importance</div>
+              <span class="badge badge-blue">Model Insights</span>
+            </div>
+            <div class="card-body">
+              {% set features = [
+                ('Contract Type',85,'red'),
+                ('Tenure',72,'amber'),
+                ('Monthly Charges',68,'blue'),
+                ('Support Calls',54,'purple'),
+                ('Payment Method',32,'green')
+              ] %}
+              {% for name, pct, color in features %}
+              <div style="margin-bottom:1rem">
+                <div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:.35rem">
+                  <span style="font-weight:600">{{ name }}</span>
+                  <span style="color:var(--txt-3)">{{ pct }}%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill fill-{{ color }}" style="width:{{ pct }}%;background:var(--{{ color }})"></div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Recommended Actions -->
+          <div class="card">
+            <div class="card-header"><div class="card-title">Recommended Actions</div></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
+              <div style="display:flex;gap:.75rem;padding:1rem;background:var(--blue-bg);border-radius:var(--r-md)">
+                <i class="fas fa-tag" style="color:var(--blue);margin-top:2px"></i>
+                <div>
+                  <div style="font-weight:700;font-size:.875rem;color:var(--blue-txt)">Offer Discount</div>
+                  <div style="font-size:.8rem;color:var(--txt-2)">Provide 10–20% discount on next monthly bill</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:.75rem;padding:1rem;background:var(--purple-bg);border-radius:var(--r-md)">
+                <i class="fas fa-headset" style="color:var(--purple);margin-top:2px"></i>
+                <div>
+                  <div style="font-weight:700;font-size:.875rem;color:var(--purple-txt)">Personal Support Call</div>
+                  <div style="font-size:.8rem;color:var(--txt-2)">Assign dedicated support representative</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:.75rem;padding:1rem;background:var(--green-bg);border-radius:var(--r-md)">
+                <i class="fas fa-gift" style="color:var(--green);margin-top:2px"></i>
+                <div>
+                  <div style="font-weight:700;font-size:.875rem;color:var(--green-txt)">Loyalty Rewards</div>
+                  <div style="font-size:.8rem;color:var(--txt-2)">Enroll in loyalty program with bonus credits</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div style="display:flex;gap:.75rem;flex-wrap:wrap">
+            <a href="/sms-alert?customer_id={{ customer_id | default('') }}" class="btn btn-primary"><i class="fas fa-sms"></i> Send SMS Alert</a>
+            <a href="/campaigns" class="btn btn-outline"><i class="fas fa-bullhorn"></i> Add to Campaign</a>
+            <a href="/predict" class="btn btn-secondary"><i class="fas fa-redo"></i> New Prediction</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% include 'layout/footer.html' %}
+  </div>
+</div>
+<script>
+const prob = {{ churn_probability | default(78) }};
+const color = prob > 70 ? '#EF4444' : prob > 40 ? '#F59E0B' : '#10B981';
+const ctx = document.getElementById('gaugeChart').getContext('2d');
+new Chart(ctx,{
+  type:'doughnut',
+  data:{
+    datasets:[{
+      data:[prob, 100-prob],
+      backgroundColor:[color,'#F1F5F9'],
+      borderWidth:0,circumference:180,rotation:270
+    }]
+  },
+  options:{responsive:false,cutout:'78%',plugins:{legend:{display:false},tooltip:{enabled:false}}}
+});
+document.getElementById('page-title').textContent='Prediction Result';
+</script>
+</body>
+</html>

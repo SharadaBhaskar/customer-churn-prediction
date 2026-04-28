@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Dashboard — ChurnPredict</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="app-shell">
+  {% include 'layout/sidebar.html' %}
+  <div class="page-content">
+    {% include 'layout/navbar.html' %}
+
+    <div class="content-wrapper">
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="breadcrumb"><a href="#">Home</a><i class="fas fa-chevron-right"></i>Dashboard</div>
+          <h1 class="page-title">Dashboard</h1>
+          <p class="page-subtitle">Overview of your business performance</p>
+        </div>
+        <div class="page-header-actions">
+          <button class="btn btn-secondary btn-sm"><i class="fas fa-calendar"></i> Last 30 Days</button>
+          <button class="btn btn-primary btn-sm"><i class="fas fa-download"></i> Export</button>
+        </div>
+      </div>
+
+      <!-- Stat Cards -->
+      <div class="grid-4 mb-4">
+        <div class="stat-card">
+          <div class="stat-icon blue"><i class="fas fa-users"></i></div>
+          <div class="stat-info">
+            <div class="stat-label">Total Customers</div>
+            <div class="stat-value">{{ total_customers | default('2,350') }}</div>
+            <div class="stat-change up"><i class="fas fa-arrow-up"></i> 12% this month</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green"><i class="fas fa-user-check"></i></div>
+          <div class="stat-info">
+            <div class="stat-label">Active Customers</div>
+            <div class="stat-value">{{ active_customers | default('1,890') }}</div>
+            <div class="stat-change up"><i class="fas fa-arrow-up"></i> 8% this month</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon red"><i class="fas fa-user-minus"></i></div>
+          <div class="stat-info">
+            <div class="stat-label">Churn Customers</div>
+            <div class="stat-value">{{ churn_customers | default('460') }}</div>
+            <div class="stat-change down"><i class="fas fa-arrow-down"></i> 3% this month</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon purple"><i class="fas fa-percentage"></i></div>
+          <div class="stat-info">
+            <div class="stat-label">Retention Rate</div>
+            <div class="stat-value">{{ retention_rate | default('80.4') }}%</div>
+            <div class="stat-change up"><i class="fas fa-arrow-up"></i> 2.1% this month</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="grid-2 mb-4">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Monthly Churn Rate</div>
+              <div class="card-subtitle">Trend over last 12 months</div>
+            </div>
+            <div class="badge badge-red">
+              <span class="status-dot dot-red"></span> Live
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="chart-area" style="height:220px"><canvas id="churnChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Customer Growth</div>
+              <div class="card-subtitle">New vs churned customers</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="chart-area" style="height:220px"><canvas id="growthChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Row -->
+      <div class="grid-2">
+        <!-- Recent Customers -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Recent Customers</div>
+            <a href="/customers" class="btn btn-ghost btn-sm">View All <i class="fas fa-arrow-right"></i></a>
+          </div>
+          <div class="table-container" style="border:none;border-radius:0;box-shadow:none">
+            <table>
+              <thead><tr><th>Name</th><th>Plan</th><th>Status</th></tr></thead>
+              <tbody>
+                {% for c in recent_customers | default([
+                  {'name':'Rahul Sharma','plan':'Premium','status':'Active'},
+                  {'name':'Priya Verma','plan':'Basic','status':'Active'},
+                  {'name':'Amit Patel','plan':'Standard','status':'Churned'},
+                  {'name':'Neha Singh','plan':'Premium','status':'Active'},
+                  {'name':'Rohit Gupta','plan':'Basic','status':'Churned'}
+                ]) %}
+                <tr>
+                  <td>
+                    <div style="display:flex;align-items:center;gap:.6rem">
+                      <div class="user-avatar" style="width:30px;height:30px;font-size:.7rem;flex-shrink:0">{{ c.name[:2].upper() }}</div>
+                      <span style="font-weight:600">{{ c.name }}</span>
+                    </div>
+                  </td>
+                  <td><span class="badge badge-blue">{{ c.plan }}</span></td>
+                  <td>
+                    <span class="badge {{ 'badge-green' if c.status=='Active' else 'badge-red' }}">
+                      <span class="status-dot {{ 'dot-green' if c.status=='Active' else 'dot-red' }}"></span>
+                      {{ c.status }}
+                    </span>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">Quick Actions</div></div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:.75rem">
+            <a href="/predict" class="plan-card" style="text-decoration:none">
+              <div class="plan-card-icon" style="background:#EEF2FF;color:var(--brand)"><i class="fas fa-robot"></i></div>
+              <div class="plan-card-info">
+                <div class="plan-card-name">Run Churn Prediction</div>
+                <div class="plan-card-desc">Predict at-risk customers using AI model</div>
+              </div>
+              <i class="fas fa-chevron-right" style="color:var(--txt-3)"></i>
+            </a>
+            <a href="/customers/add" class="plan-card" style="text-decoration:none">
+              <div class="plan-card-icon" style="background:var(--green-bg);color:var(--green)"><i class="fas fa-user-plus"></i></div>
+              <div class="plan-card-info">
+                <div class="plan-card-name">Add New Customer</div>
+                <div class="plan-card-desc">Register a new customer record</div>
+              </div>
+              <i class="fas fa-chevron-right" style="color:var(--txt-3)"></i>
+            </a>
+            <a href="/campaigns" class="plan-card" style="text-decoration:none">
+              <div class="plan-card-icon" style="background:var(--amber-bg);color:var(--amber)"><i class="fas fa-bullhorn"></i></div>
+              <div class="plan-card-info">
+                <div class="plan-card-name">Create Campaign</div>
+                <div class="plan-card-desc">Launch a targeted retention campaign</div>
+              </div>
+              <i class="fas fa-chevron-right" style="color:var(--txt-3)"></i>
+            </a>
+            <a href="/reports" class="plan-card" style="text-decoration:none">
+              <div class="plan-card-icon" style="background:var(--purple-bg);color:var(--purple)"><i class="fas fa-file-download"></i></div>
+              <div class="plan-card-info">
+                <div class="plan-card-name">Download Reports</div>
+                <div class="plan-card-desc">Export analytics and business reports</div>
+              </div>
+              <i class="fas fa-chevron-right" style="color:var(--txt-3)"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% include 'layout/footer.html' %}
+  </div>
+</div>
+
+<script>
+/* Churn Rate Line Chart */
+const churnCtx = document.getElementById('churnChart').getContext('2d');
+new Chart(churnCtx,{
+  type:'line',
+  data:{
+    labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    datasets:[{
+      label:'Churn Rate %',
+      data:[9.2,8.8,10.1,9.5,11.2,10.8,9.9,8.7,9.1,8.4,9.0,8.2],
+      borderColor:'#EF4444',backgroundColor:'rgba(239,68,68,.08)',
+      borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#EF4444',tension:.4,fill:true
+    }]
+  },
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false,grid:{color:'#F1F5F9'}},x:{grid:{display:false}}}}
+});
+
+/* Growth Bar Chart */
+const growthCtx = document.getElementById('growthChart').getContext('2d');
+new Chart(growthCtx,{
+  type:'bar',
+  data:{
+    labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    datasets:[
+      {label:'New',data:[120,145,160,130,175,190,155,168,182,195,210,230],backgroundColor:'#4F46E5',borderRadius:5},
+      {label:'Churned',data:[45,38,52,41,58,62,49,44,47,39,42,36],backgroundColor:'#EF4444',borderRadius:5}
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},scales:{y:{beginAtZero:true,grid:{color:'#F1F5F9'}},x:{grid:{display:false}}}}
+});
+
+/* Set active nav */
+document.getElementById('nav-dashboard')&&document.getElementById('nav-dashboard').classList.add('active');
+document.getElementById('page-title').textContent='Dashboard';
+</script>
+</body>
+</html>

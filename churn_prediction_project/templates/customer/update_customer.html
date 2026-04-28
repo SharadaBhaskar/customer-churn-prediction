@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Update Customer — ChurnPredict</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+<div class="app-shell">
+  {% include 'layout/sidebar.html' %}
+  <div class="page-content">
+    {% include 'layout/navbar.html' %}
+    <div class="content-wrapper">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="breadcrumb"><a href="/dashboard">Home</a><i class="fas fa-chevron-right"></i><a href="/customers">Customers</a><i class="fas fa-chevron-right"></i>Update Customer</div>
+          <h1 class="page-title">Update Customer</h1>
+          <p class="page-subtitle">Modify customer details</p>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:1.5rem;align-items:start">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title"><i class="fas fa-user-edit" style="color:var(--brand)"></i> Edit Customer Information</div>
+            </div>
+            <span class="badge badge-blue">#{{ customer.id | default('1001') }}</span>
+          </div>
+          <div class="card-body">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% for cat,msg in messages %}
+                <div class="alert alert-{{ 'danger' if cat=='error' else cat }}"><i class="fas fa-info-circle"></i> {{ msg }}</div>
+              {% endfor %}
+            {% endwith %}
+
+            <form method="POST" action="/customers/update/{{ customer.id | default(1001) }}">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Full Name <span class="req">*</span></label>
+                  <input type="text" name="full_name" class="form-control" value="{{ customer.name | default('Rahul Sharma') }}" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Email Address <span class="req">*</span></label>
+                  <input type="email" name="email" class="form-control" value="{{ customer.email | default('rahul@mail.com') }}" required>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Phone Number <span class="req">*</span></label>
+                  <input type="tel" name="phone" class="form-control" value="{{ customer.phone | default('9876543210') }}" maxlength="10" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Age</label>
+                  <input type="number" name="age" class="form-control" value="{{ customer.age | default(29) }}" min="18" max="90">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Plan Type <span class="req">*</span></label>
+                  <select name="plan_type" class="form-control" required>
+                    <option value="Basic" {{ 'selected' if customer.plan=='Basic' }}>Basic</option>
+                    <option value="Standard" {{ 'selected' if customer.plan=='Standard' }}>Standard</option>
+                    <option value="Premium" {{ 'selected' if customer.plan=='Premium' else 'selected' }}>Premium</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Tenure (Months)</label>
+                  <input type="number" name="tenure" class="form-control" value="{{ customer.tenure | default(18) }}" min="0">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Monthly Charges (₹) <span class="req">*</span></label>
+                  <input type="number" name="monthly_charges" class="form-control" value="{{ customer.monthly_charges | default(1299) }}" step="0.01" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Contract Type</label>
+                  <select name="contract_type" class="form-control">
+                    <option value="Month-to-month" {{ 'selected' if customer.contract=='Month-to-month' }}>Month-to-month</option>
+                    <option value="One year" {{ 'selected' if customer.contract=='One year' else 'selected' }}>One year</option>
+                    <option value="Two year" {{ 'selected' if customer.contract=='Two year' }}>Two year</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Payment Method</label>
+                  <select name="payment_method" class="form-control">
+                    <option value="Credit Card">Credit Card</option>
+                    <option value="Debit Card">Debit Card</option>
+                    <option value="UPI" selected>UPI</option>
+                    <option value="Net Banking">Net Banking</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Support Calls</label>
+                  <input type="number" name="support_calls" class="form-control" value="{{ customer.support_calls | default(2) }}" min="0">
+                </div>
+              </div>
+              <div style="display:flex;gap:.75rem;margin-top:.5rem">
+                <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-save"></i> Update Customer</button>
+                <a href="/customers" class="btn btn-secondary btn-lg"><i class="fas fa-times"></i> Cancel</a>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Customer Summary -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">Customer Summary</div></div>
+          <div class="card-body" style="text-align:center">
+            <div class="user-avatar" style="width:72px;height:72px;font-size:1.4rem;margin:0 auto 1rem">{{ customer.name[:2].upper() if customer.name is defined else 'RS' }}</div>
+            <h4 style="margin-bottom:.25rem">{{ customer.name | default('Rahul Sharma') }}</h4>
+            <p style="font-size:.85rem">{{ customer.email | default('rahul@mail.com') }}</p>
+            <hr class="divider">
+            <div style="display:flex;flex-direction:column;gap:.6rem;text-align:left">
+              <div style="display:flex;justify-content:space-between;font-size:.85rem">
+                <span class="text-muted">Plan</span>
+                <span class="badge badge-blue">{{ customer.plan | default('Premium') }}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:.85rem">
+                <span class="text-muted">Tenure</span>
+                <strong>{{ customer.tenure | default(18) }} months</strong>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:.85rem">
+                <span class="text-muted">Phone</span>
+                <strong>{{ customer.phone | default('9876543210') }}</strong>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:.85rem">
+                <span class="text-muted">Status</span>
+                <span class="badge badge-green"><span class="status-dot dot-green"></span> Active</span>
+              </div>
+            </div>
+            <hr class="divider">
+            <a href="/predict?customer_id={{ customer.id | default(1001) }}" class="btn btn-outline w-full"><i class="fas fa-robot"></i> Run Prediction</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% include 'layout/footer.html' %}
+  </div>
+</div>
+<script>document.getElementById('page-title').textContent='Update Customer';</script>
+</body>
+</html>
