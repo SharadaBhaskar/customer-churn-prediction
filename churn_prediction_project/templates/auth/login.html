@@ -3,50 +3,61 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Login — ChurnPredict</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
 <div class="auth-page">
-  <div class="auth-card">
+  <div class="auth-card" style="max-width:460px">
     <div class="auth-logo">ChurnPredict</div>
     <div class="auth-tagline">AI-Powered Customer Intelligence</div>
 
-    <h2 class="auth-title">Welcome Back 👋</h2>
-    <p class="auth-sub">Login to your account to continue</p>
+    <!-- Role Tabs -->
+    <div style="display:flex;background:var(--bg-page);border-radius:var(--r-md);padding:4px;margin-bottom:1.75rem;gap:4px">
+      <button id="tab-customer" onclick="switchTab('customer')"
+        style="flex:1;padding:.55rem;border:none;border-radius:var(--r-sm);font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s;background:var(--brand);color:#fff">
+        <i class="fas fa-user"></i> Customer
+      </button>
+      <button id="tab-staff" onclick="switchTab('staff')"
+        style="flex:1;padding:.55rem;border:none;border-radius:var(--r-sm);font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s;background:transparent;color:var(--txt-2)">
+        <i class="fas fa-user-shield"></i> Staff
+      </button>
+    </div>
+
+    <h2 class="auth-title" id="login-title">Customer Login</h2>
+    <p class="auth-sub" id="login-sub">Login to submit and view feedback</p>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
-      {% for cat, msg in messages %}
+      {% for cat,msg in messages %}
         <div class="alert alert-{{ 'danger' if cat=='error' else cat }}">
-          <i class="fas fa-{{ 'exclamation-circle' if cat=='danger' else 'check-circle' }}"></i> {{ msg }}
+          <i class="fas fa-{{ 'exclamation-circle' if cat=='error' else 'check-circle' }}"></i> {{ msg }}
         </div>
       {% endfor %}
     {% endwith %}
 
-    <form method="POST" action="/login" id="login-form">
+    <form method="POST" action="/login">
       <div class="form-group">
-        <label class="form-label" for="email">Email Address <span class="req">*</span></label>
+        <label class="form-label">Email Address <span class="req">*</span></label>
         <div style="position:relative">
           <i class="fas fa-envelope" style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--txt-3);font-size:.85rem"></i>
-          <input type="email" id="email" name="email" class="form-control" placeholder="you@example.com" style="padding-left:2.5rem" required>
+          <input type="email" name="email" class="form-control" placeholder="Enter your email" style="padding-left:2.5rem" required>
         </div>
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="password">Password <span class="req">*</span></label>
+        <label class="form-label">Password <span class="req">*</span></label>
         <div style="position:relative">
           <i class="fas fa-lock" style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--txt-3);font-size:.85rem"></i>
-          <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" style="padding-left:2.5rem;padding-right:2.75rem" required>
-          <button type="button" onclick="togglePwd('password','eye-icon')" style="position:absolute;right:.9rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--txt-3);cursor:pointer;padding:0">
+          <input type="password" id="pwd" name="password" class="form-control" placeholder="Enter your password" style="padding-left:2.5rem;padding-right:2.75rem" required>
+          <button type="button" onclick="togglePwd()" style="position:absolute;right:.9rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--txt-3);cursor:pointer">
             <i class="fas fa-eye" id="eye-icon" style="font-size:.9rem"></i>
           </button>
         </div>
       </div>
 
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
-        <label class="form-check">
-          <input type="checkbox" name="remember"> <span class="form-check-label">Remember me</span>
-        </label>
-        <a href="/forgot-password" style="font-size:.85rem;color:var(--brand);font-weight:600">Forgot Password?</a>
+      <!-- Staff role hint -->
+      <div id="staff-hint" style="display:none;background:var(--blue-bg);border-radius:var(--r-md);padding:.75rem 1rem;margin-bottom:1rem;font-size:.8rem;color:var(--blue-txt)">
+        <i class="fas fa-info-circle"></i> Staff accounts are created by the Admin. Contact your administrator if you don't have access.
       </div>
 
       <button type="submit" class="btn btn-grad w-full btn-lg">
@@ -56,17 +67,48 @@
 
     <hr class="divider">
     <p style="text-align:center;font-size:.875rem;color:var(--txt-3)">
-      Don't have an account? <a href="/register" style="color:var(--brand);font-weight:700">Register</a>
+      New customer? <a href="/register" style="color:var(--brand);font-weight:700">Create Account</a>
     </p>
+
+    <!-- Default credentials hint (remove in production) -->
+    <div style="margin-top:1rem;background:var(--amber-bg);border-radius:var(--r-md);padding:.75rem 1rem;font-size:.78rem;color:var(--amber-txt)">
+      <strong>Default Admin:</strong> admin@churnpredict.com / admin123
+    </div>
   </div>
 </div>
 
 <script>
-function togglePwd(id,iconId){
-  const f=document.getElementById(id);
-  const i=document.getElementById(iconId);
-  if(f.type==='password'){f.type='text';i.className='fas fa-eye-slash'}
-  else{f.type='password';i.className='fas fa-eye'}
+function switchTab(tab) {
+  const customerBtn = document.getElementById('tab-customer');
+  const staffBtn    = document.getElementById('tab-staff');
+  const title       = document.getElementById('login-title');
+  const sub         = document.getElementById('login-sub');
+  const hint        = document.getElementById('staff-hint');
+
+  if (tab === 'customer') {
+    customerBtn.style.background = 'var(--brand)';
+    customerBtn.style.color      = '#fff';
+    staffBtn.style.background    = 'transparent';
+    staffBtn.style.color         = 'var(--txt-2)';
+    title.textContent = 'Customer Login';
+    sub.textContent   = 'Login to submit and view feedback';
+    hint.style.display = 'none';
+  } else {
+    staffBtn.style.background    = 'var(--brand)';
+    staffBtn.style.color         = '#fff';
+    customerBtn.style.background = 'transparent';
+    customerBtn.style.color      = 'var(--txt-2)';
+    title.textContent = 'Staff Login';
+    sub.textContent   = 'Admin / Manager / Analyst access';
+    hint.style.display = 'block';
+  }
+}
+
+function togglePwd() {
+  const f = document.getElementById('pwd');
+  const i = document.getElementById('eye-icon');
+  f.type = f.type === 'password' ? 'text' : 'password';
+  i.className = f.type === 'text' ? 'fas fa-eye-slash' : 'fas fa-eye';
 }
 </script>
 </body>

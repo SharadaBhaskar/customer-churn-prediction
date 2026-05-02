@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Feedback — ChurnPredict</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+body { background: var(--grad-soft); }
+.feedback-wrap { max-width:780px; margin:0 auto; padding:2rem 1rem; }
+.brand-logo { font-family:sans-serif; font-size:1.8rem; font-weight:800; background:var(--grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.review-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--r-lg); padding:1.25rem; box-shadow:var(--sh-sm); animation:slideUp .3s ease both; }
+@keyframes slideUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+.avatar { width:42px;height:42px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.9rem;flex-shrink:0; }
+.star-filled { color:#F59E0B; }
+.star-empty  { color:#E2E8F0; }
+.live-dot { width:8px;height:8px;background:#10B981;border-radius:50%;display:inline-block;animation:pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+</style>
+</head>
+<body>
+<div class="feedback-wrap">
+
+  <!-- Top bar -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem">
+    <div class="brand-logo">ChurnPredict</div>
+    <div style="display:flex;align-items:center;gap:.75rem">
+      <div class="user-avatar" style="width:36px;height:36px;font-size:.8rem">
+        {{ current_user.full_name[:2].upper() if current_user else 'U' }}
+      </div>
+      <div>
+        <div style="font-weight:700;font-size:.875rem">{{ current_user.full_name if current_user else 'User' }}</div>
+        <div style="font-size:.75rem;color:var(--txt-3)">Customer</div>
+      </div>
+      <a href="/logout" class="btn btn-secondary btn-sm"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+  </div>
+
+  <!-- Submit Form -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-pen-alt" style="color:var(--brand)"></i> Write a Review</div>
+      <div class="card-subtitle">Share your experience with ChurnPredict</div>
+    </div>
+    <div class="card-body">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat,msg in messages %}
+          <div class="alert alert-{{ 'success' if cat=='success' else 'danger' }}">
+            <i class="fas fa-{{ 'check-circle' if cat=='success' else 'times-circle' }}"></i> {{ msg }}
+          </div>
+        {% endfor %}
+      {% endwith %}
+
+      <form method="POST" action="/customer/feedback">
+        <div class="form-group">
+          <label class="form-label">Your Rating <span class="req">*</span></label>
+          <div class="stars" id="star-row">
+            {% for i in range(1,6) %}
+              <span class="star {{ 'filled' if i<=4 }}" data-val="{{ i }}" onclick="setRating({{ i }})" style="font-size:1.75rem;cursor:pointer">★</span>
+            {% endfor %}
+          </div>
+          <input type="hidden" name="rating" id="rating-val" value="4">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select name="category" class="form-control">
+              <option value="General">General Experience</option>
+              <option value="UI">User Interface</option>
+              <option value="Performance">Performance</option>
+              <option value="Support">Customer Support</option>
+              <option value="Feature">Feature Request</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Your Review <span class="req">*</span></label>
+          <textarea name="feedback_text" class="form-control" rows="4" placeholder="Share your experience…" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-grad btn-lg w-full">
+          <i class="fas fa-paper-plane"></i> Submit Review
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Live Reviews -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title"><span class="live-dot"></span> &nbsp;Customer Reviews</div>
+        <div class="card-subtitle" id="rev-count">Loading…</div>
+      </div>
+      <span id="new-badge" style="display:none;background:var(--green-bg);color:var(--green-txt);font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:999px">New!</span>
+    </div>
+    <div class="card-body" id="reviews-wrap" style="display:flex;flex-direction:column;gap:.875rem;max-height:500px;overflow-y:auto">
+      <div style="text-align:center;padding:2rem;color:var(--txt-3)">
+        <i class="fas fa-spinner fa-spin" style="font-size:1.5rem"></i>
+        <p style="margin-top:.5rem">Loading reviews…</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function setRating(v){
+  document.getElementById('rating-val').value=v;
+  document.querySelectorAll('.star').forEach((s,i)=>s.classList.toggle('filled',i<v));
+}
+
+function stars(n){
+  return [1,2,3,4,5].map(i=>
+    `<span class="${i<=n?'star-filled':'star-empty'}">★</span>`
+  ).join('');
+}
+
+function timeAgo(d){
+  const s=Math.floor((new Date()-new Date(d))/1000);
+  if(s<60) return 'Just now';
+  if(s<3600) return Math.floor(s/60)+' min ago';
+  if(s<86400) return Math.floor(s/3600)+' hr ago';
+  return Math.floor(s/86400)+' day(s) ago';
+}
+
+let lastId = 0;
+
+function loadReviews(){
+  fetch('/api/feedback')
+    .then(r=>r.json())
+    .then(data=>{
+      document.getElementById('rev-count').textContent = data.length+' review'+(data.length!==1?'s':'');
+      if(data.length>0 && data[0].id > lastId && lastId>0){
+        const b=document.getElementById('new-badge');
+        b.style.display='inline-block';
+        setTimeout(()=>b.style.display='none',4000);
+      }
+      if(data.length>0) lastId=data[0].id;
+
+      const wrap=document.getElementById('reviews-wrap');
+      if(!data.length){
+        wrap.innerHTML='<div style="text-align:center;padding:2rem;color:var(--txt-3)"><i class="fas fa-star" style="font-size:2rem;color:var(--border)"></i><p style="margin-top:.75rem">No reviews yet. Be the first!</p></div>';
+        return;
+      }
+      wrap.innerHTML=data.map(r=>`
+        <div class="review-card">
+          <div style="display:flex;gap:.875rem;align-items:flex-start">
+            <div class="avatar">${r.name.substring(0,2).toUpperCase()}</div>
+            <div style="flex:1">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.2rem">
+                <span style="font-weight:700;font-size:.9rem">${r.name}</span>
+                <span style="font-size:.72rem;color:var(--txt-3)">${timeAgo(r.created_at)}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem">
+                <span>${stars(r.rating)}</span>
+                <span style="font-size:.72rem;background:var(--bg-page);padding:1px 8px;border-radius:999px;color:var(--txt-2)">${r.category}</span>
+              </div>
+              <p style="font-size:.875rem;color:var(--txt-2);margin:0;line-height:1.6">${r.feedback_text}</p>
+            </div>
+          </div>
+        </div>`).join('');
+    })
+    .catch(()=>{
+      document.getElementById('reviews-wrap').innerHTML='<p style="text-align:center;color:var(--txt-3);padding:1rem">Could not load reviews.</p>';
+    });
+}
+
+loadReviews();
+setInterval(loadReviews, 5000);
+</script>
+</body>
+</html>

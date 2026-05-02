@@ -6,33 +6,6 @@
 <link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
-/* ── Dark Theme ── */
-body.dark-mode {
-  --bg-page:    #0F0C29;
-  --bg-card:    #1A1740;
-  --bg-sidebar: #07050F;
-  --bg-nav:     #1A1740;
-  --txt-1:      #F1F5F9;
-  --txt-2:      #94A3B8;
-  --txt-3:      #64748B;
-  --border:     #2D2A50;
-}
-body.dark-mode .navbar,
-body.dark-mode .card,
-body.dark-mode .footer {
-  background: var(--bg-card);
-  border-color: var(--border);
-}
-body.dark-mode .form-control {
-  background: #0F0C29;
-  color: #F1F5F9;
-  border-color: var(--border);
-}
-body.dark-mode table thead th { background: #12103A; }
-body.dark-mode tbody tr:hover { background: #1E1B4B; }
-body.dark-mode .settings-item { border-color: var(--border); }
-
-/* ── Toast banner ── */
 #toast-banner {
   display:none;
   position:fixed;bottom:1.5rem;right:1.5rem;
@@ -175,28 +148,6 @@ body.dark-mode .settings-item { border-color: var(--border); }
             </select>
           </div>
 
-          <!-- Theme -->
-          <div class="settings-item">
-            <div class="settings-item-left">
-              <div class="settings-item-icon"><i class="fas fa-adjust"></i></div>
-              <div>
-                <div class="settings-item-title">Theme</div>
-                <div class="settings-item-desc" id="theme-desc">Currently using Light mode</div>
-              </div>
-            </div>
-            <div style="display:flex;gap:.5rem">
-              <button class="btn btn-primary btn-sm" id="btn-light" onclick="setTheme('light')">
-                <i class="fas fa-sun"></i> Light
-              </button>
-              <button class="btn btn-secondary btn-sm" id="btn-dark" onclick="setTheme('dark')">
-                <i class="fas fa-moon"></i> Dark
-              </button>
-              <button class="btn btn-secondary btn-sm" id="btn-system" onclick="setTheme('system')">
-                <i class="fas fa-desktop"></i> System
-              </button>
-            </div>
-          </div>
-
           <!-- Font Size -->
           <div class="settings-item">
             <div class="settings-item-left">
@@ -245,37 +196,9 @@ body.dark-mode .settings-item { border-color: var(--border); }
   </div>
 </div>
 
-<!-- Toast notification -->
 <div id="toast-banner"></div>
 
 <script>
-/* ─────────────── THEME ─────────────── */
-function setTheme(theme) {
-  const body = document.body;
-
-  if (theme === 'dark') {
-    body.classList.add('dark-mode');
-    document.getElementById('theme-desc').textContent = 'Currently using Dark mode';
-  } else if (theme === 'light') {
-    body.classList.remove('dark-mode');
-    document.getElementById('theme-desc').textContent = 'Currently using Light mode';
-  } else {
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    prefersDark ? body.classList.add('dark-mode') : body.classList.remove('dark-mode');
-    document.getElementById('theme-desc').textContent = 'Following system preference';
-  }
-
-  // Update button active states
-  ['light','dark','system'].forEach(t => {
-    const btn = document.getElementById('btn-' + t);
-    btn.className = (t === theme) ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm';
-  });
-
-  localStorage.setItem('theme', theme);
-  showToast('🎨 Theme changed to ' + theme.charAt(0).toUpperCase() + theme.slice(1));
-}
-
-/* ─────────────── LANGUAGE ─────────────── */
 const langNames = {
   en:'English', hi:'Hindi (हिन्दी)', gu:'Gujarati (ગુજરાતી)',
   mr:'Marathi (मराठी)', ta:'Tamil (தமிழ்)', te:'Telugu (తెలుగు)',
@@ -292,14 +215,12 @@ function changeLanguage(lang) {
   showToast('🌐 Language changed to ' + langNames[lang]);
 }
 
-/* ─────────────── FONT SIZE ─────────────── */
 function changeFontSize(size) {
   document.documentElement.style.fontSize = size + 'px';
   localStorage.setItem('fontSize', size);
   showToast('🔤 Font size updated');
 }
 
-/* ─────────────── TOAST ─────────────── */
 function showToast(msg) {
   const t = document.getElementById('toast-banner');
   t.textContent = msg;
@@ -308,10 +229,8 @@ function showToast(msg) {
   window._toastTimer = setTimeout(() => t.style.display = 'none', 3000);
 }
 
-/* ─────────────── SAVE ALL ─────────────── */
 function saveAllSettings() {
   const settings = {
-    theme:      localStorage.getItem('theme') || 'light',
     language:   localStorage.getItem('language') || 'en',
     fontSize:   localStorage.getItem('fontSize') || '16',
     twoFA:      document.getElementById('toggle-2fa').checked,
@@ -323,35 +242,26 @@ function saveAllSettings() {
   showToast('✅ All settings saved successfully!');
 }
 
-/* ─────────────── DELETE ─────────────── */
 function confirmDelete() {
   if (confirm('Are you sure? This will permanently delete your account and cannot be undone.')) {
     showToast('🗑️ Account deletion requested.');
   }
 }
 
-/* ─────────────── RESTORE ON LOAD ─────────────── */
 window.addEventListener('DOMContentLoaded', () => {
-  // Restore theme
-  const savedTheme = localStorage.getItem('theme') || 'light';
-  setTheme(savedTheme);
-
-  // Restore language
   const savedLang = localStorage.getItem('language') || 'en';
   document.getElementById('lang-select').value = savedLang;
   document.getElementById('lang-desc').textContent = 'Currently: ' + langNames[savedLang];
 
-  // Restore font size
   const savedFont = localStorage.getItem('fontSize') || '16';
   document.getElementById('font-select').value = savedFont;
   document.documentElement.style.fontSize = savedFont + 'px';
 
-  // Restore toggles
   const saved = JSON.parse(localStorage.getItem('settings') || '{}');
-  if (saved.twoFA      !== undefined) document.getElementById('toggle-2fa').checked    = saved.twoFA;
-  if (saved.emailNotif !== undefined) document.getElementById('toggle-email').checked  = saved.emailNotif;
-  if (saved.smsNotif   !== undefined) document.getElementById('toggle-sms').checked    = saved.smsNotif;
-  if (saved.riskAlerts !== undefined) document.getElementById('toggle-risk').checked   = saved.riskAlerts;
+  if (saved.twoFA      !== undefined) document.getElementById('toggle-2fa').checked   = saved.twoFA;
+  if (saved.emailNotif !== undefined) document.getElementById('toggle-email').checked = saved.emailNotif;
+  if (saved.smsNotif   !== undefined) document.getElementById('toggle-sms').checked   = saved.smsNotif;
+  if (saved.riskAlerts !== undefined) document.getElementById('toggle-risk').checked  = saved.riskAlerts;
 });
 
 const pt = document.getElementById('page-title');

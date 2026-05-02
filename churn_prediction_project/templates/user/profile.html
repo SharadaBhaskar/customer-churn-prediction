@@ -24,18 +24,18 @@
         <!-- Profile Card -->
         <div class="card">
           <div class="card-body" style="text-align:center">
-            <div class="profile-avatar-lg" id="avatar-display">{{ current_user.name[:2].upper() if current_user else 'RS' }}</div>
-            <div class="profile-name">{{ current_user.name if current_user else 'Rahul Sharma' }}</div>
+            <div class="profile-avatar-lg" id="avatar-display">{{ current_user.full_name[:2].upper() if current_user else 'RS' }}</div>
+            <div class="profile-name">{{ current_user.full_name if current_user else 'Rahul Sharma' }}</div>
             <div class="profile-role">{{ current_user.role if current_user else 'Admin' }}</div>
             <hr class="divider">
             <div style="display:flex;flex-direction:column;gap:.75rem;text-align:left">
               <div style="display:flex;align-items:center;gap:.6rem;font-size:.875rem">
                 <i class="fas fa-envelope" style="color:var(--txt-3);width:16px"></i>
-                <span>{{ current_user.email if current_user else 'rahul@mail.com' }}</span>
+                <span>{{ current_user.email if current_user else 'admin@churnpredict.com' }}</span>
               </div>
               <div style="display:flex;align-items:center;gap:.6rem;font-size:.875rem">
                 <i class="fas fa-phone" style="color:var(--txt-3);width:16px"></i>
-                <span>{{ current_user.phone if current_user else '9876543210' }}</span>
+                <span>{{ current_user.phone if current_user else 'Not set' }}</span>
               </div>
               <div style="display:flex;align-items:center;gap:.6rem;font-size:.875rem">
                 <i class="fas fa-shield-alt" style="color:var(--txt-3);width:16px"></i>
@@ -59,29 +59,28 @@
               {% endfor %}
             {% endwith %}
 
-            <!-- FIX: removed </form> from opening tag -->
             <form method="POST" action="/profile">
               <div class="form-row">
                 <div class="form-group">
                   <label class="form-label">Full Name <span class="req">*</span></label>
-                  <input type="text" name="full_name" class="form-control" value="{{ current_user.name if current_user else 'Rahul Sharma' }}" required>
+                  <input type="text" name="full_name" class="form-control" value="{{ current_user.full_name if current_user else '' }}" required>
                 </div>
                 <div class="form-group">
                   <label class="form-label">Email <span class="req">*</span></label>
-                  <input type="email" name="email" class="form-control" value="{{ current_user.email if current_user else 'rahul@mail.com' }}" required>
+                  <input type="email" name="email" class="form-control" value="{{ current_user.email if current_user else '' }}" required>
                 </div>
               </div>
               <div class="form-row">
                 <div class="form-group">
                   <label class="form-label">Phone</label>
-                  <input type="tel" name="phone" class="form-control" value="{{ current_user.phone if current_user else '9876543210' }}">
+                  <input type="tel" name="phone" class="form-control" value="{{ current_user.phone if current_user else '' }}">
                 </div>
                 <div class="form-group">
                   <label class="form-label">Role</label>
                   <select name="role" class="form-control">
-                    <option value="Admin" selected>Admin</option>
-                    <option value="Manager">Manager</option>
-                    <option value="Analyst">Analyst</option>
+                    <option value="Admin" {{ 'selected' if current_user and current_user.role == 'Admin' }}>Admin</option>
+                    <option value="Manager" {{ 'selected' if current_user and current_user.role == 'Manager' }}>Manager</option>
+                    <option value="Analyst" {{ 'selected' if current_user and current_user.role == 'Analyst' }}>Analyst</option>
                   </select>
                 </div>
               </div>
@@ -94,7 +93,7 @@
                 </div>
                 <div class="form-group">
                   <label class="form-label">New Password</label>
-                  <input type="password" name="new_password" class="form-control" placeholder="••••••••" minlength="8">
+                  <input type="password" name="new_password" class="form-control" placeholder="••••••••" minlength="6">
                 </div>
                 <div class="form-group">
                   <label class="form-label">Confirm New</label>
@@ -105,7 +104,6 @@
                 <i class="fas fa-save"></i> Update Profile
               </button>
             </form>
-
           </div>
         </div>
       </div>

@@ -26,6 +26,13 @@
     <a href="/analytics" class="nav-item" id="nav-analytics"><i class="fas fa-chart-line"></i> Analytics</a>
     <a href="/reports" class="nav-item" id="nav-reports"><i class="fas fa-file-alt"></i> Reports</a>
     <a href="/feedback" class="nav-item" id="nav-feedback"><i class="fas fa-star"></i> Feedback</a>
+
+    {% if current_user and current_user['role'] == 'Admin' %}
+    <a href="/admin/users" class="nav-item" id="nav-users">
+      <i class="fas fa-users-cog"></i> Manage Users
+    </a>
+    {% endif %}
+
   </nav>
 
   <div class="sidebar-footer">
@@ -43,7 +50,8 @@
     '/retention':'nav-retention','/campaigns':'nav-campaigns',
     '/sms-alert':'nav-sms','/analytics':'nav-analytics',
     '/reports':'nav-reports','/feedback':'nav-feedback',
-    '/profile':'nav-profile','/settings':'nav-settings'
+    '/profile':'nav-profile','/settings':'nav-settings',
+    '/admin/users':'nav-users'
   };
   const path = window.location.pathname;
   for(const [route, id] of Object.entries(map)){

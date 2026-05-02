@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Feedback — ChurnPredict</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+<div class="app-shell">
+  {% include 'layout/sidebar.html' %}
+  <div class="page-content">
+    {% include 'layout/navbar.html' %}
+    <div class="content-wrapper">
+
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="breadcrumb"><a href="/dashboard">Home</a><i class="fas fa-chevron-right"></i>Feedback</div>
+          <h1 class="page-title">Customer Feedback</h1>
+          <p class="page-subtitle">All reviews submitted by customers</p>
+        </div>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="grid-4 mb-4">
+        <div class="stat-card">
+          <div class="stat-icon amber"><i class="fas fa-star"></i></div>
+          <div class="stat-info">
+            <div class="stat-label">Avg Rating</div>
+            <div class="stat-value">{{ avg_rating }}/5</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon blue"><i class="fas fa-comments"></i></div>
+          <div class="stat-info">
+            <div class="stat-label">Total Reviews</div>
+            <div class="stat-value">{{ total_feedback }}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green"><i class="fas fa-thumbs-up"></i></div>
+          <div class="stat-info">
+            <div class="stat-label">5 Star Reviews</div>
+            <div class="stat-value">{{ feedbacks | selectattr('rating', 'equalto', 5) | list | length }}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon red"><i class="fas fa-thumbs-down"></i></div>
+          <div class="stat-info">
+            <div class="stat-label">Low Ratings (1-2)</div>
+            <div class="stat-value">{{ feedbacks | selectattr('rating', 'le', 2) | list | length }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feedback List -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="fas fa-star" style="color:var(--amber)"></i> All Customer Reviews</div>
+          <div class="card-subtitle">{{ total_feedback }} total reviews</div>
+        </div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:1rem">
+          {% if feedbacks %}
+            {% for f in feedbacks %}
+            <div style="background:var(--bg-page);border-radius:var(--r-lg);padding:1.25rem;border:1px solid var(--border)">
+              <div style="display:flex;align-items:flex-start;gap:.875rem">
+                <div class="user-avatar" style="width:42px;height:42px;font-size:.9rem;flex-shrink:0">
+                  {{ f['name'][:2].upper() if f['name'] else 'AN' }}
+                </div>
+                <div style="flex:1">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.25rem">
+                    <span style="font-weight:700;font-size:.9rem">{{ f['name'] or 'Anonymous' }}</span>
+                    <span style="font-size:.75rem;color:var(--txt-3)">{{ f['created_at'] }}</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem">
+                    {% for i in range(1,6) %}
+                      {% if i <= f['rating'] %}
+                        <span style="color:#F59E0B;font-size:1rem">★</span>
+                      {% else %}
+                        <span style="color:#E2E8F0;font-size:1rem">★</span>
+                      {% endif %}
+                    {% endfor %}
+                    <span class="badge badge-blue" style="font-size:.72rem">{{ f['category'] }}</span>
+                  </div>
+                  <p style="font-size:.875rem;color:var(--txt-2);line-height:1.6;margin:0">
+                    {{ f['feedback_text'] }}
+                  </p>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="empty-state">
+              <i class="fas fa-star"></i>
+              <h4>No feedback yet</h4>
+              <p>Customer reviews will appear here once submitted.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+    {% include 'layout/footer.html' %}
+  </div>
+</div>
+<script>document.getElementById('page-title')&&(document.getElementById('page-title').textContent='Feedback');</script>
+</body>
+</html>

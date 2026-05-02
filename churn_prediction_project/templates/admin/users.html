@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Manage Users — ChurnPredict</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+<div class="app-shell">
+  {% include 'layout/sidebar.html' %}
+  <div class="page-content">
+    {% include 'layout/navbar.html' %}
+    <div class="content-wrapper">
+
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="breadcrumb"><a href="/dashboard">Home</a><i class="fas fa-chevron-right"></i>Admin<i class="fas fa-chevron-right"></i>Users</div>
+          <h1 class="page-title">Manage Users</h1>
+          <p class="page-subtitle">Create and manage staff accounts</p>
+        </div>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat,msg in messages %}
+          <div class="alert alert-{{ 'success' if cat=='success' else 'danger' }}">
+            <i class="fas fa-{{ 'check-circle' if cat=='success' else 'times-circle' }}"></i> {{ msg }}
+          </div>
+        {% endfor %}
+      {% endwith %}
+
+      <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:1.5rem;align-items:start">
+
+        <!-- Users Table -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">All Users</div></div>
+          <div class="table-container" style="border:none;box-shadow:none;border-radius:0">
+            <table>
+              <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr></thead>
+              <tbody>
+                {% for u in users %}
+                <tr>
+                  <td>
+                    <div style="display:flex;align-items:center;gap:.6rem">
+                      <div class="user-avatar" style="width:30px;height:30px;font-size:.7rem">{{ u.full_name[:2].upper() }}</div>
+                      <span style="font-weight:600;font-size:.875rem">{{ u.full_name }}</span>
+                    </div>
+                  </td>
+                  <td style="font-size:.85rem;color:var(--txt-2)">{{ u.email }}</td>
+                  <td>
+                    <span class="badge
+                      {{ 'badge-red' if u.role=='Admin' else
+                         ('badge-blue' if u.role=='Manager' else
+                         ('badge-purple' if u.role=='Analyst' else 'badge-green')) }}">
+                      {{ u.role }}
+                    </span>
+                  </td>
+                  <td>
+                    {% if u.id != current_user.id %}
+                    <a href="/admin/delete-user/{{ u.id }}"
+                       class="btn btn-ghost btn-sm"
+                       style="color:var(--red)"
+                       onclick="return confirm('Delete {{ u.full_name }}?')">
+                      <i class="fas fa-trash"></i>
+                    </a>
+                    {% else %}
+                    <span style="font-size:.75rem;color:var(--txt-3)">You</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Create Staff Form -->
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i class="fas fa-user-plus" style="color:var(--brand)"></i> Create Staff Account</div></div>
+          <div class="card-body">
+            <form method="POST" action="/admin/create-staff">
+              <div class="form-group">
+                <label class="form-label">Full Name <span class="req">*</span></label>
+                <input type="text" name="full_name" class="form-control" placeholder="Staff full name" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Email <span class="req">*</span></label>
+                <input type="email" name="email" class="form-control" placeholder="staff@company.com" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Password <span class="req">*</span></label>
+                <input type="password" name="password" class="form-control" placeholder="Min 6 characters" required minlength="6">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Role <span class="req">*</span></label>
+                <select name="role" class="form-control" required>
+                  <option value="Analyst">Analyst</option>
+                  <option value="Manager">Manager</option>
+                  <option value="Admin">Admin</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary w-full"><i class="fas fa-plus"></i> Create Account</button>
+            </form>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    {% include 'layout/footer.html' %}
+  </div>
+</div>
+<script>document.getElementById('page-title')&&(document.getElementById('page-title').textContent='Manage Users');</script>
+</body>
+</html>
