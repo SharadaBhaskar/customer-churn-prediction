@@ -401,7 +401,80 @@ def predict():
         customer_name=cname, tenure=tenure,
         monthly_charges=monthly, total_charges=total
     )
+# ════════════════════════════════════════
+#  BULK PREDICTION UPLOAD
+# ════════════════════════════════════════
+@app.route("/predict/bulk", methods=["GET","POST"])
+@staff_required
+def bulk_predict():
+    if request.method == "POST":
+        if "file" not in request.files:
+            flash("No file uploaded.", "error")
+            return redirect(url_for("bulk_predict"))
 
+        file = request.files["file"]
+        if file.filename == "":
+            flash("No file selected.", "error")
+            return redirect(url_for("bulk_predict"))
+
+        if not file.filename.endswith(".csv"):
+            flash("Only CSV files are supported.", "error")
+            return redirect(url_for("bulk_predict"))
+
+        import csv, io
+        stream    = io.StringIO(file.stream.read().decode("utf-8"), newline=None)
+        reader    = csv.DictReader(stream)
+        results   = []
+        errors    = []
+        conn      = get_db()
+
+        for i, row in enumerate(reader, start=1):
+            try:
+                # Try to get required columns — support multiple naming formats
+                name    = row.get("full_name") or row.get("name") or row.get("customerID") or f"Customer {i}"
+                tenure  = float(row.get("tenure") or 0)
+                monthly = float(row.get("monthly_charges") or row.get("MonthlyCharges") or 0)
+                total   = float(row.get("total_charges") or row.get("TotalCharges") or tenure * monthly or 0)
+
+                prob = round(float(model.predict_proba(np.array([[tenure, monthly, total]]))[0][1]) * 100, 2)
+                risk = "High Risk" if prob > 70 else ("Medium Risk" if prob > 40 else "Low Risk")
+
+                # Save to predictions table
+                conn.execute("""INSERT INTO predictions
+                    (customer_name, tenure, monthly_charges, total_charges, probability, risk_level)
+                    VALUES (?,?,?,?,?,?)""",
+                    (name, tenure, monthly, total, prob, risk))
+
+                results.append({
+                    "name":    name,
+                    "tenure":  tenure,
+                    "monthly": monthly,
+                    "total":   total,
+                    "prob":    prob,
+                    "risk":    risk
+                })
+            except Exception as e:
+                errors.append(f"Row {i}: {str(e)}")
+
+        conn.commit()
+        conn.close()
+
+        return render_template("churn/bulk_result.html",
+            results=results,
+            errors=errors,
+            total=len(results),
+            high_risk=sum(1 for r in results if r["risk"] == "High Risk"),
+            medium_risk=sum(1 for r in results if r["risk"] == "Medium Risk"),
+            low_risk=sum(1 for r in results if r["risk"] == "Low Risk")
+        )
+
+    return render_template("churn/bulk_predict.html")
+@app.route("/predict/bulk/sample")
+@staff_required
+def bulk_sample():
+    output = "full_name,tenure,monthly_charges,total_charges\nRahul Sharma,12,1299,15588\nPriya Verma,6,899,5394\nAmit Patel,24,1599,38376\nNeha Singh,3,699,2097\nRohit Gupta,36,1999,71964\n"
+    return Response(output, mimetype="text/csv",
+        headers={"Content-Disposition": "attachment;filename=sample_bulk_upload.csv"})
 # ════════════════════════════════════════
 #  STAFF — OTHER PAGES
 # ════════════════════════════════════════

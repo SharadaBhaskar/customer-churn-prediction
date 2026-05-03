@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Bulk Results — ChurnPredict</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="app-shell">
+  {% include 'layout/sidebar.html' %}
+  <div class="page-content">
+    {% include 'layout/navbar.html' %}
+    <div class="content-wrapper">
+
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="breadcrumb"><a href="/dashboard">Home</a><i class="fas fa-chevron-right"></i><a href="/predict">Prediction</a><i class="fas fa-chevron-right"></i>Bulk Results</div>
+          <h1 class="page-title">Bulk Prediction Results</h1>
+          <p class="page-subtitle">{{ total }} customers analysed</p>
+        </div>
+        <div class="page-header-actions">
+          <a href="/predict/bulk" class="btn btn-secondary"><i class="fas fa-upload"></i> Upload Another</a>
+          <button class="btn btn-primary" onclick="downloadResults()"><i class="fas fa-download"></i> Download CSV</button>
+        </div>
+      </div>
+
+      <!-- Summary Stats -->
+      <div class="grid-4 mb-4">
+        <div class="stat-card">
+          <div class="stat-icon blue"><i class="fas fa-users"></i></div>
+          <div class="stat-info">
+            <div class="stat-label">Total Analysed</div>
+            <div class="stat-value">{{ total }}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon red"><i class="fas fa-exclamation-circle"></i></div>
+          <div class="stat-info">
+            <div class="stat-label">High Risk</div>
+            <div class="stat-value">{{ high_risk }}</div>
+            <div class="stat-change down">{{ ((high_risk/total)*100)|round(1) if total > 0 else 0 }}% of total</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon amber"><i class="fas fa-exclamation-triangle"></i></div>
+          <div class="stat-info">
+            <div class="stat-label">Medium Risk</div>
+            <div class="stat-value">{{ medium_risk }}</div>
+            <div class="stat-change">{{ ((medium_risk/total)*100)|round(1) if total > 0 else 0 }}% of total</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+          <div class="stat-info">
+            <div class="stat-label">Low Risk</div>
+            <div class="stat-value">{{ low_risk }}</div>
+            <div class="stat-change up">{{ ((low_risk/total)*100)|round(1) if total > 0 else 0 }}% of total</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2 mb-4">
+        <!-- Pie Chart -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">Risk Distribution</div></div>
+          <div class="card-body" style="display:flex;justify-content:center">
+            <canvas id="riskPie" width="260" height="260"></canvas>
+          </div>
+        </div>
+
+        <!-- Errors if any -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Processing Summary</div>
+          </div>
+          <div class="card-body">
+            <div style="display:flex;flex-direction:column;gap:.75rem">
+              <div style="display:flex;justify-content:space-between;padding:.75rem;background:var(--green-bg);border-radius:var(--r-md)">
+                <span style="font-weight:600;color:var(--green-txt)"><i class="fas fa-check-circle"></i> Successfully processed</span>
+                <strong style="color:var(--green-txt)">{{ total }}</strong>
+              </div>
+              {% if errors %}
+              <div style="display:flex;justify-content:space-between;padding:.75rem;background:var(--red-bg);border-radius:var(--r-md)">
+                <span style="font-weight:600;color:var(--red-txt)"><i class="fas fa-times-circle"></i> Rows with errors</span>
+                <strong style="color:var(--red-txt)">{{ errors|length }}</strong>
+              </div>
+              <div style="max-height:120px;overflow-y:auto;background:var(--bg-page);border-radius:var(--r-md);padding:.75rem">
+                {% for err in errors %}
+                <div style="font-size:.78rem;color:var(--red);margin-bottom:.25rem">{{ err }}</div>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Table -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Detailed Results</div>
+          <div class="filter-bar" style="margin:0">
+            <select id="risk-filter" class="form-control" style="width:160px" onchange="filterTable()">
+              <option value="">All Risk Levels</option>
+              <option value="High Risk">High Risk</option>
+              <option value="Medium Risk">Medium Risk</option>
+              <option value="Low Risk">Low Risk</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-container" style="border:none;box-shadow:none;border-radius:0">
+          <table id="results-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Customer Name</th>
+                <th>Tenure</th>
+                <th>Monthly Charges</th>
+                <th>Total Charges</th>
+                <th>Churn Probability</th>
+                <th>Risk Level</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in results %}
+              <tr data-risk="{{ r.risk }}">
+                <td style="color:var(--txt-3)">{{ loop.index }}</td>
+                <td style="font-weight:600">
+                  <div style="display:flex;align-items:center;gap:.5rem">
+                    <div class="user-avatar" style="width:28px;height:28px;font-size:.65rem;flex-shrink:0">{{ r.name[:2].upper() }}</div>
+                    {{ r.name }}
+                  </div>
+                </td>
+                <td>{{ r.tenure }} mo</td>
+                <td>₹{{ r.monthly }}</td>
+                <td>₹{{ r.total }}</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:.5rem">
+                    <div style="flex:1;background:#E2E8F0;border-radius:999px;height:6px;min-width:80px">
+                      <div style="width:{{ r.prob }}%;height:100%;border-radius:999px;background:{{ '#EF4444' if r.risk=='High Risk' else ('#F59E0B' if r.risk=='Medium Risk' else '#10B981') }}"></div>
+                    </div>
+                    <strong style="color:{{ '#EF4444' if r.risk=='High Risk' else ('#F59E0B' if r.risk=='Medium Risk' else '#10B981') }}">{{ r.prob }}%</strong>
+                  </div>
+                </td>
+                <td>
+                  <span class="badge {{ 'badge-red' if r.risk=='High Risk' else ('badge-amber' if r.risk=='Medium Risk' else 'badge-green') }}">
+                    {{ r.risk }}
+                  </span>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+    {% include 'layout/footer.html' %}
+  </div>
+</div>
+
+<script>
+// Pie Chart
+new Chart(document.getElementById('riskPie').getContext('2d'), {
+  type: 'doughnut',
+  data: {
+    labels: ['High Risk', 'Medium Risk', 'Low Risk'],
+    datasets: [{
+      data: [{{ high_risk }}, {{ medium_risk }}, {{ low_risk }}],
+      backgroundColor: ['#EF4444', '#F59E0B', '#10B981'],
+      borderWidth: 3, borderColor: '#fff', hoverOffset: 6
+    }]
+  },
+  options: { responsive: false, plugins: { legend: { position: 'bottom' } } }
+});
+
+// Filter table
+function filterTable() {
+  const val = document.getElementById('risk-filter').value;
+  document.querySelectorAll('#results-table tbody tr').forEach(row => {
+    row.style.display = (!val || row.dataset.risk === val) ? '' : 'none';
+  });
+}
+
+// Download results as CSV
+function downloadResults() {
+  const rows = [['Name','Tenure','Monthly Charges','Total Charges','Probability','Risk Level']];
+  document.querySelectorAll('#results-table tbody tr').forEach(row => {
+    const cells = row.querySelectorAll('td');
+    rows.push([
+      cells[1].textContent.trim(),
+      cells[2].textContent.trim(),
+      cells[3].textContent.trim(),
+      cells[4].textContent.trim(),
+      cells[5].textContent.trim(),
+      cells[6].textContent.trim()
+    ]);
+  });
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const a   = document.createElement('a');
+  a.href    = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'bulk_prediction_results.csv';
+  a.click();
+}
+
+const pt = document.getElementById('page-title');
+if(pt) pt.textContent = 'Bulk Results';
+</script>
+</body>
+</html>
